@@ -2,6 +2,9 @@
 
 export type MemberRole = 'owner' | 'admin' | 'member';
 
+/** 커뮤니티 유형: 일반 / 팬커뮤니티 / (운영자 선정) 대표 */
+export type CommunityKind = 'normal' | 'fan' | 'featured';
+
 export interface User {
   id: string;
   email: string;
@@ -18,7 +21,14 @@ export interface Community {
   slug: string;
   name: string;
   description: string;
+  /** 대표 카테고리 (topics[0] 과 동일하게 유지 · 하위호환) */
   category: string;
+  /** 이 커뮤니티가 동시에 속하는 주제들. 한 커뮤니티가 여러 주제 페이지에 노출된다. */
+  topics: string[];
+  /** 지역 (지역별 카페용, 선택) */
+  region?: string;
+  /** 유형 (일반/팬/대표) */
+  kind: CommunityKind;
   /** 커버/테마 색 */
   themeColor: string;
   ownerId: string;
@@ -52,6 +62,8 @@ export interface Post {
   authorId: string;
   title: string;
   content: string;
+  /** 태그(노출 채널). 글의 소속(community/board)은 하나지만, 태그로 여러 카테고리·메인·검색에 노출된다. */
+  tags: string[];
   views: number;
   /** 추천한 유저 id 목록 */
   likedBy: string[];
@@ -96,4 +108,38 @@ export const CATEGORIES = [
   '여행',
   '학업/교육',
   '기타',
+] as const;
+
+/** 크게 묶은 대주제 (주제별 카페 탐색용) */
+export const TOPICS = [
+  '생활',
+  '취미',
+  '게임',
+  '자동차',
+  '투자',
+  '부동산',
+  '건강',
+  '여행',
+  '엔터',
+  '스포츠',
+  '음식',
+  '교육',
+  'IT',
+] as const;
+
+/** 지역 (지역별 카페 탐색용) */
+export const REGIONS = [
+  '서울',
+  '경기',
+  '인천',
+  '부산',
+  '대구',
+  '대전',
+  '광주',
+  '울산',
+  '강원',
+  '충청',
+  '전라',
+  '경상',
+  '제주',
 ] as const;

@@ -1,6 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
+import ExplorePage from './pages/ExplorePage';
+import BrowsePage from './pages/BrowsePage';
+import RankingPage from './pages/RankingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import CreateCommunityPage from './pages/CreateCommunityPage';
@@ -15,6 +18,9 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="explore" element={<ExplorePage />} />
+        <Route path="browse/:mode" element={<BrowsePage />} />
+        <Route path="ranking" element={<RankingPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignupPage />} />
         <Route path="create" element={<CreateCommunityPage />} />

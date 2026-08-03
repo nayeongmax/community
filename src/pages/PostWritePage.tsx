@@ -15,6 +15,7 @@ export default function PostWritePage() {
   const [boardId, setBoardId] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tagInput, setTagInput] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -58,12 +59,17 @@ export default function PostWritePage() {
       // 멤버가 아니면 자동 가입 처리
       const ms = await store.getMembership(community.id, user.id);
       if (!ms) await store.joinCommunity(community.id, user.id);
+      const tags = tagInput
+        .split(/[,\s]+/)
+        .map((t) => t.replace(/^#/, '').trim())
+        .filter(Boolean);
       const post = await store.createPost({
         communityId: community.id,
         boardId,
         authorId: user.id,
         title,
         content,
+        tags,
       });
       navigate(`/c/${community.slug}/post/${post.id}`);
     } catch (err) {
@@ -102,6 +108,17 @@ export default function PostWritePage() {
           rows={12}
           className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 resize-y leading-relaxed"
         />
+        <div>
+          <input
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            placeholder="태그 (쉼표/공백으로 구분 · 예: 자동차, 수입차, 정비)"
+            className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 text-sm"
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            태그를 달면 이 글이 메인·검색·같은 태그 피드 등 여러 곳에 노출됩니다. (글 원본은 하나)
+          </p>
+        </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
         <div className="flex justify-end gap-2">
           <button

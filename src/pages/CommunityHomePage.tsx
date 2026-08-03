@@ -118,13 +118,39 @@ export default function CommunityHomePage() {
               </button>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-black text-slate-800">{community.name}</h1>
-            <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
-              {community.category}
-            </span>
+            {community.kind === 'fan' && (
+              <span className="text-xs font-bold bg-rose-50 text-rose-500 px-2 py-0.5 rounded">
+                ❤️ 팬
+              </span>
+            )}
+            {community.kind === 'featured' && (
+              <span className="text-xs font-bold bg-amber-50 text-amber-600 px-2 py-0.5 rounded">
+                👑 대표
+              </span>
+            )}
           </div>
-          <p className="text-sm text-slate-500 mt-1">{community.description}</p>
+          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+            {(community.topics ?? [community.category]).map((t) => (
+              <Link
+                key={t}
+                to={`/browse/topic?tab=${encodeURIComponent(t)}`}
+                className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded hover:bg-slate-200"
+              >
+                {t}
+              </Link>
+            ))}
+            {community.region && (
+              <Link
+                to={`/browse/region?tab=${encodeURIComponent(community.region)}`}
+                className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded hover:bg-emerald-100"
+              >
+                📍 {community.region}
+              </Link>
+            )}
+          </div>
+          <p className="text-sm text-slate-500 mt-2">{community.description}</p>
           <div className="mt-2 text-xs text-slate-400">멤버 {formatCount(members)}명</div>
         </div>
       </div>
@@ -198,10 +224,15 @@ export default function CommunityHomePage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                      <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
                         <span>{p.authorNickname}</span>
                         <span>·</span>
                         <span>{timeAgo(p.createdAt)}</span>
+                        {p.tags.slice(0, 3).map((t) => (
+                          <span key={t} className="text-indigo-400">
+                            #{t}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     <div className="text-xs text-slate-400 text-right shrink-0 hidden sm:block">

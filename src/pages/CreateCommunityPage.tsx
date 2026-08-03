@@ -2,17 +2,25 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import * as store from '../lib/store';
-import { CATEGORIES } from '../lib/types';
+import { CommunityKind, REGIONS, TOPICS } from '../lib/types';
 
 export default function CreateCommunityPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [region, setRegion] = useState<string>('');
+  const [kind, setKind] = useState<CommunityKind>('normal');
   const [isPublic, setIsPublic] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const toggleTopic = (t: string) => {
+    setTopics((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : prev.length >= 3 ? prev : [...prev, t]
+    );
+  };
 
   if (!user) {
     return (
@@ -32,12 +40,15 @@ export default function CreateCommunityPage() {
     e.preventDefault();
     setError('');
     if (name.trim().length < 2) return setError('커뮤니티 이름은 2자 이상 입력해주세요.');
+    if (topics.length === 0) return setError('주제를 1개 이상 선택해주세요.');
     setBusy(true);
     try {
       const c = await store.createCommunity({
         name,
         description,
-        category,
+        topics,
+        region: region || undefined,
+        kind,
         ownerId: user.id,
         isPublic,
       });
@@ -68,18 +79,57 @@ export default function CreateCommunityPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1.5">카테고리</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 bg-white"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <label className="block text-sm font-bold text-slate-700 mb-1.5">
+            주제 <span className="text-slate-400 font-normal">(최대 3개 · 여러 주제 페이지에 노출됩니다)</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {TOPICS.map((t) => {
+              const on = topics.includes(t);
+              return (
+                <button
+                  type="button"
+                  key={t}
+                  onClick={() => toggleTopic(t)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
+                    on
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+                  }`}
+                >
+                  {on ? '✓ ' : ''}
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">지역 (선택)</label>
+            <select
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 bg-white text-sm"
+            >
+              <option value="">지역 없음</option>
+              {REGIONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">유형</label>
+            <select
+              value={kind}
+              onChange={(e) => setKind(e.target.value as CommunityKind)}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 bg-white text-sm"
+            >
+              <option value="normal">일반</option>
+              <option value="fan">팬커뮤니티</option>
+            </select>
+          </div>
         </div>
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-1.5">소개</label>

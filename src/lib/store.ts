@@ -12,7 +12,7 @@ import { seedDB } from './seed';
  * 프로덕션 스키마는 프로젝트 루트의 supabase-schema.sql 참고.
  */
 
-const STORAGE_KEY = 'community-platform-db-v1';
+const STORAGE_KEY = 'community-platform-db-v2';
 
 function emptyDB(): DB {
   return { users: [], communities: [], boards: [], memberships: [], posts: [], comments: [] };
@@ -98,7 +98,10 @@ export async function getCommunity(id: string): Promise<Community | undefined> {
 export async function createCommunity(input: {
   name: string;
   description: string;
-  category: string;
+  category?: string;
+  topics?: string[];
+  region?: string;
+  kind?: Community['kind'];
   ownerId: string;
   isPublic: boolean;
 }): Promise<Community> {
@@ -108,12 +111,16 @@ export async function createCommunity(input: {
   while (d.communities.some((c) => c.slug === slug)) {
     slug = slugify(input.name) + '-' + ++n;
   }
+  const topics = normalizeTags(input.topics ?? (input.category ? [input.category] : []));
   const community: Community = {
     id: uid('c_'),
     slug,
     name: input.name.trim(),
     description: input.description.trim(),
-    category: input.category,
+    category: input.category ?? topics[0] ?? '기타',
+    topics: topics.length ? topics : ['기타'],
+    region: input.region,
+    kind: input.kind ?? 'normal',
     themeColor: colorFromString(input.name + slug),
     ownerId: input.ownerId,
     isPublic: input.isPublic,
@@ -256,17 +263,28 @@ export interface PostView extends Post {
   authorColor: string;
   boardName: string;
   commentCount: number;
+  /** 이 글이 속한 커뮤니티 정보 (통합 메인/검색에서 "어디서 왔는지" 표시용) */
+  communityName: string;
+  communitySlug: string;
+  communityColor: string;
+  communityCategory: string;
 }
 
 function toPostView(d: DB, p: Post): PostView {
   const author = d.users.find((u) => u.id === p.authorId);
   const board = d.boards.find((b) => b.id === p.boardId);
+  const community = d.communities.find((c) => c.id === p.communityId);
   return {
     ...p,
+    tags: p.tags ?? [],
     authorNickname: author?.nickname ?? '(탈퇴)',
     authorColor: author?.avatarColor ?? '#94a3b8',
     boardName: board?.name ?? '',
     commentCount: d.comments.filter((c) => c.postId === p.id).length,
+    communityName: community?.name ?? '(삭제된 커뮤니티)',
+    communitySlug: community?.slug ?? '',
+    communityColor: community?.themeColor ?? '#94a3b8',
+    communityCategory: community?.category ?? '기타',
   };
 }
 
@@ -308,6 +326,7 @@ export async function createPost(input: {
   authorId: string;
   title: string;
   content: string;
+  tags?: string[];
 }): Promise<Post> {
   const d = db();
   const post: Post = {
@@ -317,6 +336,7 @@ export async function createPost(input: {
     authorId: input.authorId,
     title: input.title.trim(),
     content: input.content,
+    tags: normalizeTags(input.tags ?? []),
     views: 0,
     likedBy: [],
     dislikedBy: [],
@@ -419,15 +439,249 @@ export async function toggleCommentLike(id: string, userId: string): Promise<voi
 export interface CommunityStat extends Community {
   members: number;
   posts: number;
+  /** 최근 24시간 새 글 수 */
+  recentPosts: number;
+  /** 최근 24시간 새 댓글 수 */
+  recentComments: number;
+  /** 최근 24시간 새 멤버 수 */
+  recentMembers: number;
+  /** "지금 뜨는" 판단용 트렌드 점수 (최근 활동 기반) */
+  trendScore: number;
+  /** 마지막 활동 시각(글/댓글) */
+  lastActiveAt: string;
+}
+
+function toCommunityStat(d: DB, c: Community): CommunityStat {
+  const dayAgo = Date.now() - 24 * 3600000;
+  const isRecent = (iso: string) => new Date(iso).getTime() >= dayAgo;
+  const cPosts = d.posts.filter((p) => p.communityId === c.id);
+  const postIds = new Set(cPosts.map((p) => p.id));
+  const cComments = d.comments.filter((cm) => postIds.has(cm.postId));
+  const cMembers = d.memberships.filter((m) => m.communityId === c.id);
+
+  const recentPosts = cPosts.filter((p) => isRecent(p.createdAt)).length;
+  const recentComments = cComments.filter((cm) => isRecent(cm.createdAt)).length;
+  const recentMembers = cMembers.filter((m) => isRecent(m.joinedAt)).length;
+
+  const times = [
+    ...cPosts.map((p) => p.createdAt),
+    ...cComments.map((cm) => cm.createdAt),
+    c.createdAt,
+  ];
+  const lastActiveAt = times.sort().slice(-1)[0] ?? c.createdAt;
+
+  return {
+    ...c,
+    topics: c.topics ?? [c.category],
+    kind: c.kind ?? 'normal',
+    members: cMembers.length,
+    posts: cPosts.length,
+    recentPosts,
+    recentComments,
+    recentMembers,
+    // 최근 글·댓글·멤버에 가중치. "실시간으로 움직이는" 커뮤니티가 위로.
+    trendScore: recentPosts * 3 + recentComments * 1.5 + recentMembers * 4,
+    lastActiveAt,
+  };
 }
 
 export async function listCommunitiesWithStats(): Promise<CommunityStat[]> {
   const d = db();
+  return delay(d.communities.map((c) => toCommunityStat(d, c)));
+}
+
+/**
+ * 주제/지역/유형별 커뮤니티 탐색.
+ * - 한 커뮤니티가 여러 주제(topics)에 속하므로, topic 필터는 "그 주제를 포함하는 모든 커뮤니티"를 반환.
+ */
+export type CommunitySort = 'trend' | 'members' | 'new' | 'active';
+
+export async function listCommunitiesBy(opts: {
+  topic?: string;
+  region?: string;
+  kind?: Community['kind'];
+  sort?: CommunitySort;
+} = {}): Promise<CommunityStat[]> {
+  const d = db();
+  let list = d.communities.map((c) => toCommunityStat(d, c));
+
+  if (opts.topic) {
+    const t = opts.topic;
+    list = list.filter((c) => c.topics.includes(t) || c.category === t);
+  }
+  if (opts.region) list = list.filter((c) => c.region === opts.region);
+  if (opts.kind) list = list.filter((c) => c.kind === opts.kind);
+
+  const sort = opts.sort ?? 'trend';
+  list.sort((a, b) => {
+    if (sort === 'members') return b.members - a.members;
+    if (sort === 'new')
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sort === 'active')
+      return new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime();
+    return b.trendScore - a.trendScore || b.members - a.members; // trend
+  });
+  return delay(list);
+}
+
+/** 지금 뜨는 커뮤니티 (최근 활동 급상승) */
+export async function listTrendingCommunities(limit = 8): Promise<CommunityStat[]> {
+  const d = db();
   return delay(
-    d.communities.map((c) => ({
-      ...c,
-      members: d.memberships.filter((m) => m.communityId === c.id).length,
-      posts: d.posts.filter((p) => p.communityId === c.id).length,
-    }))
+    d.communities
+      .map((c) => toCommunityStat(d, c))
+      .filter((c) => c.trendScore > 0)
+      .sort((a, b) => b.trendScore - a.trendScore)
+      .slice(0, limit)
   );
+}
+
+// ---------------- 통합 피드 (디시식 메인 · 모든 커뮤니티 글이 섞여서 노출) ----------------
+
+export type FeedSort = 'hot' | 'new' | 'comments' | 'top';
+
+/** 태그 정규화: 앞의 # 제거, 공백 정리, 소문자 아닌 원문 유지, 중복 제거, 최대 5개 */
+export function normalizeTags(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of tags) {
+    const t = raw.replace(/^#/, '').trim();
+    if (!t) continue;
+    const key = t.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(t);
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
+/**
+ * 인기(hot) 점수 = 반응/댓글/조회에 시간 감쇠를 적용한 값.
+ * 레딧과 유사하게 "최근 + 반응 많은" 글이 위로 올라오도록 한다.
+ */
+function hotScore(p: PostView, now: number): number {
+  const ageHr = Math.max(0, (now - new Date(p.createdAt).getTime()) / 3600000);
+  const engagement =
+    p.likedBy.length * 3 + p.commentCount * 2 + p.views * 0.05 - p.dislikedBy.length * 2;
+  // 시간 감쇠(약 12시간 반감기). +2 로 신생 글이 0으로 죽지 않게.
+  return (engagement + 1) / Math.pow(ageHr + 2, 1.3);
+}
+
+/**
+ * 전 커뮤니티 통합 글 피드.
+ * - 글의 소속(커뮤니티/게시판)은 하나지만, 여기서는 전부 섞여서 노출된다.
+ * - tag 로 필터하면 "그 태그가 붙은 여러 커뮤니티의 글"이 한 곳에 모인다(노출 여러 곳).
+ * - q 로 검색하면 제목/내용/태그/커뮤니티명을 아우른다(전체검색).
+ */
+export async function listFeed(opts: {
+  sort?: FeedSort;
+  tag?: string;
+  q?: string;
+  excludeNotice?: boolean;
+  limit?: number;
+} = {}): Promise<PostView[]> {
+  const d = db();
+  const now = Date.now();
+  let views = d.posts.map((p) => toPostView(d, p));
+
+  if (opts.excludeNotice ?? true) {
+    views = views.filter((p) => !p.pinned);
+  }
+  if (opts.tag) {
+    const tag = opts.tag.toLowerCase();
+    views = views.filter(
+      (p) =>
+        p.tags.some((t) => t.toLowerCase() === tag) ||
+        p.communityCategory.toLowerCase() === tag
+    );
+  }
+  if (opts.q) {
+    const q = opts.q.toLowerCase();
+    views = views.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.content.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q)) ||
+        p.communityName.toLowerCase().includes(q)
+    );
+  }
+
+  const sort = opts.sort ?? 'hot';
+  views.sort((a, b) => {
+    if (sort === 'new')
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sort === 'comments') return b.commentCount - a.commentCount;
+    if (sort === 'top')
+      return b.likedBy.length - b.dislikedBy.length - (a.likedBy.length - a.dislikedBy.length);
+    return hotScore(b, now) - hotScore(a, now); // hot
+  });
+
+  return delay(opts.limit ? views.slice(0, opts.limit) : views);
+}
+
+/** 인기 태그(카테고리 칩용) — 글에 붙은 태그를 빈도순으로 집계 */
+export async function listPopularTags(limit = 12): Promise<{ tag: string; count: number }[]> {
+  const d = db();
+  const counts = new Map<string, number>();
+  for (const p of d.posts) {
+    for (const t of p.tags ?? []) {
+      const key = t.trim();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+  return delay(
+    [...counts.entries()]
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+  );
+}
+
+// ---------------- 전체 검색 (커뮤니티 + 글 동시) ----------------
+
+export async function searchAll(
+  query: string
+): Promise<{ communities: CommunityStat[]; posts: PostView[] }> {
+  const q = query.trim().toLowerCase();
+  if (!q) return delay({ communities: [], posts: [] });
+  const d = db();
+  const communities = d.communities
+    .filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.category.toLowerCase().includes(q) ||
+        (c.topics ?? []).some((t) => t.toLowerCase().includes(q)) ||
+        (c.region ?? '').toLowerCase().includes(q)
+    )
+    .map((c) => toCommunityStat(d, c));
+  const posts = await listFeed({ q: query, sort: 'hot', excludeNotice: false });
+  return delay({ communities, posts });
+}
+
+// ---------------- 오늘의 실시간 통계 (통계바용) ----------------
+
+export interface SiteStats {
+  totalCommunities: number;
+  totalPosts: number;
+  totalComments: number;
+  todayPosts: number;
+  todayComments: number;
+  todayMembers: number;
+}
+
+export async function getSiteStats(): Promise<SiteStats> {
+  const d = db();
+  const dayAgo = Date.now() - 24 * 3600000;
+  const isToday = (iso: string) => new Date(iso).getTime() >= dayAgo;
+  return delay({
+    totalCommunities: d.communities.length,
+    totalPosts: d.posts.length,
+    totalComments: d.comments.length,
+    todayPosts: d.posts.filter((p) => isToday(p.createdAt)).length,
+    todayComments: d.comments.filter((c) => isToday(c.createdAt)).length,
+    todayMembers: d.memberships.filter((m) => isToday(m.joinedAt)).length,
+  });
 }
