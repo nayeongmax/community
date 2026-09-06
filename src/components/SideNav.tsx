@@ -15,6 +15,7 @@ const FEED: Item[] = [
   { icon: '🔍', label: '탐색', to: '/explore', match: (p) => p.startsWith('/explore') },
   { icon: '⭐', label: '구독', to: '/me', match: (p) => p.startsWith('/me') },
   { icon: '📢', label: '인기', to: '/?sort=hot', match: (p, s) => p === '/' && s.includes('sort=hot') },
+  { icon: '🎮', label: '게임', to: '/games', match: (p) => p.startsWith('/games') },
   { icon: '💬', label: '채팅', to: '#', match: () => false, soon: true },
 ];
 

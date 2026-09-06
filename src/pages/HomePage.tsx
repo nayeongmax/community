@@ -209,6 +209,23 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* 🎮 게임 센터 바로가기 */}
+      {!tag && (
+        <Link
+          to="/games"
+          className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3 mb-4 hover:shadow-md"
+        >
+          <span className="text-2xl">🎮</span>
+          <div className="min-w-0">
+            <p className="font-black text-slate-800 text-sm">게임 센터 · 익명 자유게시판</p>
+            <p className="text-xs text-slate-500 truncate">
+              미니게임 10종을 클릭으로 즐기고, 익명으로 자유롭게 수다 떠세요
+            </p>
+          </div>
+          <span className="ml-auto text-xs font-bold text-indigo-600 shrink-0">바로가기 →</span>
+        </Link>
+      )}
+
       {stats && <StatBar stats={stats} />}
 
       {/* 🔥 지금 뜨는 커뮤니티 (실시간으로 움직이는 커뮤니티) */}

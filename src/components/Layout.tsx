@@ -79,6 +79,7 @@ export default function Layout() {
       <div className="lg:hidden border-b border-slate-100 bg-white overflow-x-auto">
         <div className="flex gap-1 px-3 py-2 text-sm whitespace-nowrap">
           {[
+            ['🎮 게임', '/games'],
             ['🔍 탐색', '/explore'],
             ['📁 주제별', '/browse/topic'],
             ['📍 지역별', '/browse/region'],
