@@ -13,8 +13,36 @@ import Snake from './Snake';
 import Breakout from './Breakout';
 import Flappy from './Flappy';
 import Dart from './Dart';
+import TriviaQuiz from './TriviaQuiz';
+import OXQuiz from './OXQuiz';
 
 export const GAMES: GameDef[] = [
+  {
+    id: 'trivia',
+    title: '일반상식 퀴즈',
+    emoji: '🧠',
+    tagline: '4지선다 10문제',
+    howTo: '문제당 15초 · 빨리 맞힐수록 점수가 올라갑니다',
+    badge: 'NEW',
+    card: 'bg-gradient-to-br from-blue-100 to-indigo-50 border-blue-200',
+    accent: 'text-blue-600',
+    xpRate: 0.25,
+    maxXp: 60,
+    Component: TriviaQuiz,
+  },
+  {
+    id: 'oxquiz',
+    title: 'OX 퀴즈',
+    emoji: '⭕',
+    tagline: '카지노 룰 · 게임 상식',
+    howTo: 'O 인지 X 인지 고르세요 · 3연속 정답부터 콤보 보너스',
+    badge: 'NEW',
+    card: 'bg-gradient-to-br from-teal-100 to-emerald-50 border-teal-200',
+    accent: 'text-teal-600',
+    xpRate: 0.45,
+    maxXp: 60,
+    Component: OXQuiz,
+  },
   {
     id: 'dart',
     title: '다트 던지기',
