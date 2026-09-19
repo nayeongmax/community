@@ -12,7 +12,9 @@
 | --- | --- | --- |
 | 홈 · 커뮤니티 · **글 상세** · 탐색 · 랭킹 · 주제별 | **Next.js (서버 렌더링)** | ✅ 완료 |
 | sitemap.xml · robots.txt · rss.xml | Next.js (서버 생성) | ✅ 완료 |
-| 로그인 · 글쓰기 · 댓글 · 커뮤니티 관리 | 구 SPA (`legacy/`) | ⏳ 이전 남음 |
+| 로그인 · 회원가입 · 커뮤니티 개설 · 가입 | **Next.js (Server Actions)** | ✅ 완료 |
+| 글쓰기 · 수정 · 삭제 · 댓글 · 추천 | **Next.js (Server Actions)** | ✅ 완료 |
+| 커뮤니티 관리(게시판·꾸미기) | 구 SPA (`legacy/`) | ⏳ 이전 남음 |
 | 게임 랜드 · 익명 게시판 · 광고 배너 | 구 SPA (`legacy/`) | ⏳ 이전 남음 |
 
 - 새 앱: `app/` (Next.js App Router) + `lib/server/` (서버 데이터)
@@ -42,6 +44,9 @@ curl -A "Yeti" http://localhost:3000/c/tigers/post/<글번호>
 
 관련 코드: `app/c/[slug]/post/[id]/page.tsx` 의 `generateMetadata()` 와 본문 렌더링.
 
+**글을 새로 쓰면 그 즉시** 위 HTML 이 만들어지고 `sitemap.xml` · `rss.xml` 에도 함께 올라갑니다.
+(사이트맵은 `force-dynamic` 이라 빌드 시점에 고정되지 않습니다)
+
 ### 검색엔진에 제출할 것
 
 | 주소 | 내용 |
@@ -58,6 +63,26 @@ curl -A "Yeti" http://localhost:3000/c/tigers/post/<글번호>
 4. **요청 → 사이트맵 제출** 에 `https://도메인/sitemap.xml`
 5. **요청 → RSS 제출** 에 `https://도메인/rss.xml`
 6. 급한 글은 **요청 → 웹페이지 수집** 에 글 주소를 직접 넣습니다
+
+## ✍️ 쓰기 동작 (Server Actions)
+
+글·댓글·추천은 브라우저가 아니라 **서버에서** 처리합니다.
+버튼을 숨기는 것만으로는 막히지 않기 때문에, 권한 검사도 서버에서 합니다.
+
+| 동작 | 누가 | 코드 |
+| --- | --- | --- |
+| 로그인 · 회원가입 · 로그아웃 | 누구나 | `loginAction` · `signupAction` · `logoutAction` |
+| 커뮤니티 개설 · 가입/탈퇴 | 로그인 사용자 | `createCommunityAction` · `toggleJoinAction` |
+| 글쓰기 | 로그인 사용자 (자동 가입) | `writePostAction` |
+| 글 수정 | **작성자만** | `writePostAction` |
+| 글 삭제 | **작성자 또는 운영진** | `deletePostAction` |
+| 댓글 작성 | 로그인 사용자 | `writeCommentAction` |
+| 댓글 삭제 | 작성자 또는 운영진 | `deleteCommentAction` |
+| 추천 · 비추천 | 로그인 사용자 | `reactAction` |
+
+모두 `lib/server/actions.ts` 에 있고, 로그인 세션은 쿠키 한 개입니다
+(`lib/server/session.ts`). 데모라 비밀번호를 평문 비교하므로, 실제 서비스에서는
+Supabase Auth 같은 인증 서비스로 바꿔야 합니다.
 
 ## 🚀 실행 방법
 

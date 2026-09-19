@@ -2,7 +2,12 @@ import type { MetadataRoute } from 'next';
 import { listAllPosts, listCommunities } from '../lib/server/queries';
 import { site } from '../lib/site';
 
-/** /sitemap.xml — 글이 늘어나면 자동으로 함께 늘어난다 */
+/**
+ * /sitemap.xml — 글이 늘어나면 자동으로 함께 늘어난다.
+ * 빌드 시점에 고정되면 새 글이 빠지므로 매 요청마다 다시 만든다.
+ */
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [posts, communities] = await Promise.all([listAllPosts(), listCommunities()]);
 

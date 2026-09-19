@@ -2,8 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCommunityBySlug, getPost, listComments } from '../../../../../lib/server/queries';
+import { currentUser, isManager, myRole } from '../../../../../lib/server/session';
+import { countViewAction } from '../../../../../lib/server/actions';
 import { site, summarize } from '../../../../../lib/site';
 import { timeAgo } from '../../../../../lib/utils';
+import PostActions from '../../../../../components/PostActions';
+import CommentSection from '../../../../../components/CommentSection';
 
 /**
  * 글 상세 — 서버에서 그린다.
@@ -45,12 +49,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostPage({ params }: Props) {
   const { slug, id } = await params;
-  const [post, community, comments] = await Promise.all([
+  const [post, community, comments, me] = await Promise.all([
     getPost(id),
     getCommunityBySlug(slug),
     listComments(id),
+    currentUser(),
   ]);
   if (!post || !community) notFound();
+
+  await countViewAction(post.id);
+
+  const role = await myRole(community.id);
+  const isAuthor = me?.id === post.authorId;
+  // 작성자 본인이거나 운영진이면 지울 수 있다
+  const canDelete = !!me && (isAuthor || isManager(role));
 
   const url = `${site.url}/c/${slug}/post/${id}`;
 
@@ -144,36 +156,28 @@ export default async function PostPage({ params }: Props) {
           </div>
         )}
 
-        <div className="flex items-center gap-3 border-t border-hair pt-3 text-sm">
-          <span className="font-semibold text-ink">▲ 추천 {post.likedBy.length}</span>
-          <span className="text-ink-mute">▼ 비추 {post.dislikedBy.length}</span>
-          <Link href={`/c/${slug}`} className="ml-auto text-ink-mute font-semibold hover:text-ink">
-            목록 →
-          </Link>
-        </div>
+        <PostActions
+          postId={post.id}
+          slug={slug}
+          likes={post.likedBy.length}
+          dislikes={post.dislikedBy.length}
+          liked={!!me && post.likedBy.includes(me.id)}
+          disliked={!!me && post.dislikedBy.includes(me.id)}
+          isAuthor={!!isAuthor}
+          canDelete={canDelete}
+        />
       </article>
 
-      <section className="bg-white rounded-2xl border border-hair p-5 mt-4">
-        <h2 className="font-bold text-ink mb-3">댓글 {comments.length}</h2>
-        {comments.length === 0 ? (
-          <p className="text-sm text-ink-faint py-4 text-center">첫 댓글을 남겨보세요.</p>
-        ) : (
-          <ul className="space-y-3">
-            {comments.map((c) => (
-              <li key={c.id} className="border-b border-hair pb-3 last:border-0 last:pb-0">
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="font-bold text-ink-soft">{c.authorNickname}</span>
-                  <time className="text-ink-faint" dateTime={c.createdAt}>
-                    {timeAgo(c.createdAt)}
-                  </time>
-                  {c.likes > 0 && <span className="text-ink-faint">· 👍 {c.likes}</span>}
-                </div>
-                <p className="text-sm text-ink mt-1 whitespace-pre-wrap">{c.content}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <CommentSection
+        postId={post.id}
+        slug={slug}
+        loggedIn={!!me}
+        comments={comments.map((c) => ({
+          ...c,
+          canDelete: !!me && (c.authorNickname === me.nickname || isManager(role)),
+        }))}
+        timeLabels={Object.fromEntries(comments.map((c) => [c.id, timeAgo(c.createdAt)]))}
+      />
     </div>
   );
 }

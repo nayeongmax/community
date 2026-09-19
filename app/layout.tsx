@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
 import Link from 'next/link';
 import { site } from '../lib/site';
+import { currentUser } from '../lib/server/session';
+import { logoutAction } from '../lib/server/actions';
+import { userEmoji } from '../lib/emoji';
 import './globals.css';
 
 const noto = Noto_Sans_KR({
@@ -29,7 +32,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const me = await currentUser();
   return (
     <html lang="ko" className={noto.variable}>
       <body className="font-sans min-h-screen flex flex-col">
@@ -48,6 +52,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/ranking" className="px-3 py-2 rounded-lg hover:bg-ground hover:text-ink">
                 랭킹
               </Link>
+              <Link
+                href="/create"
+                className="hidden sm:inline-block bg-ink text-white px-3.5 py-2 rounded-lg font-bold hover:bg-ink-soft"
+              >
+                커뮤니티 개설
+              </Link>
+              {me ? (
+                <span className="flex items-center gap-1 ml-1">
+                  <Link href="/me" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-ground">
+                    <span className="w-7 h-7 rounded-full bg-ground border border-hair grid place-items-center text-sm">
+                      {userEmoji(me.nickname)}
+                    </span>
+                    <span className="hidden sm:block font-bold text-ink">{me.nickname}</span>
+                  </Link>
+                  <form action={logoutAction}>
+                    <button className="text-xs text-ink-faint hover:text-ink px-2 py-1">
+                      로그아웃
+                    </button>
+                  </form>
+                </span>
+              ) : (
+                <Link
+                  href="/login"
+                  className="ml-1 px-3 py-2 rounded-lg border border-hair font-bold text-ink hover:border-ink/25"
+                >
+                  로그인
+                </Link>
+              )}
             </nav>
           </div>
         </header>

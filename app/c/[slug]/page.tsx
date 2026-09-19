@@ -7,6 +7,8 @@ import {
   listPostsOfCommunity,
 } from '../../../lib/server/queries';
 import { site } from '../../../lib/site';
+import { currentUser, isManager, myRole } from '../../../lib/server/session';
+import { toggleJoinAction } from '../../../lib/server/actions';
 import { communityEmoji } from '../../../lib/emoji';
 import { timeAgo } from '../../../lib/utils';
 
@@ -32,10 +34,12 @@ export default async function CommunityPage({ params }: Props) {
   const community = await getCommunityBySlug(slug);
   if (!community) notFound();
 
-  const [boards, posts] = await Promise.all([
+  const [boards, posts, me] = await Promise.all([
     listBoards(community.id),
     listPostsOfCommunity(community.id),
+    currentUser(),
   ]);
+  const role = await myRole(community.id);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -65,8 +69,33 @@ export default async function CommunityPage({ params }: Props) {
           <span className="w-14 h-14 rounded-2xl bg-ground border border-hair grid place-items-center text-2xl shrink-0">
             {community.emoji || communityEmoji(community.slug)}
           </span>
-          <div className="min-w-0">
-            <h1 className="text-xl font-black text-ink">{community.name}</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-xl font-black text-ink">{community.name}</h1>
+              <div className="flex items-center gap-2 shrink-0">
+                {isManager(role) && (
+                  <Link
+                    href={`/c/${slug}/settings`}
+                    className="text-sm font-semibold border border-hair px-3 py-1.5 rounded-lg hover:border-ink/25"
+                  >
+                    관리
+                  </Link>
+                )}
+                {me && (
+                  <form action={toggleJoinAction.bind(null, community.id, slug)}>
+                    <button
+                      className={`text-sm font-bold px-4 py-1.5 rounded-lg ${
+                        role
+                          ? 'bg-ground text-ink-mute border border-hair'
+                          : 'bg-ink text-white hover:bg-ink-soft'
+                      }`}
+                    >
+                      {role === 'owner' ? '운영자' : role ? '가입됨' : '+ 가입하기'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {(community.topics ?? []).map((t) => (
                 <Link
@@ -100,7 +129,15 @@ export default async function CommunityPage({ params }: Props) {
         </aside>
 
         <section className="bg-white rounded-2xl border border-hair overflow-hidden">
-          <h2 className="px-4 py-3 font-bold text-ink border-b border-hair">전체글</h2>
+          <div className="px-4 py-3 flex items-center border-b border-hair">
+            <h2 className="font-bold text-ink">전체글</h2>
+            <Link
+              href={`/c/${slug}/write`}
+              className="ml-auto text-sm font-bold bg-ink text-white px-3.5 py-1.5 rounded-lg hover:bg-ink-soft"
+            >
+              글쓰기
+            </Link>
+          </div>
           <ul className="divide-y divide-hair">
             {posts.map((p) => (
               <li key={p.id}>
