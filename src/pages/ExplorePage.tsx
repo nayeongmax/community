@@ -4,6 +4,7 @@ import * as store from '../lib/store';
 import { CommunityStat } from '../lib/store';
 import { REGIONS, TOPICS } from '../lib/types';
 import CommunityAvatar from '../components/CommunityAvatar';
+import { useSeo } from '../lib/seo';
 
 const TOPIC_EMOJI: Record<string, string> = {
   '생활/취미': '🏡', 게임: '🎮', 자동차: '🚗', 투자: '📈', 부동산: '🏢',
@@ -12,6 +13,7 @@ const TOPIC_EMOJI: Record<string, string> = {
 };
 
 export default function ExplorePage() {
+  useSeo({ title: '탐색', description: '주제와 지역으로 새로운 커뮤니티를 발견하세요.', path: '/explore' });
   const [trending, setTrending] = useState<CommunityStat[]>([]);
 
   useEffect(() => {

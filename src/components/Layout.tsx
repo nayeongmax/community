@@ -111,7 +111,16 @@ export default function Layout() {
       </div>
 
       <footer className="border-t border-hair bg-white py-7 text-center text-xs text-ink-faint">
-        누구나 만드는 오픈 커뮤니티 플랫폼 · 데모
+        <p>누구나 만드는 오픈 커뮤니티 플랫폼 · 데모</p>
+        <p className="mt-2 flex items-center justify-center gap-3">
+          <Link to="/seo" className="hover:text-ink-mute">
+            검색 노출 설정
+          </Link>
+          <span>·</span>
+          <Link to="/ads" className="hover:text-ink-mute">
+            광고 배너
+          </Link>
+        </p>
       </footer>
     </div>
   );

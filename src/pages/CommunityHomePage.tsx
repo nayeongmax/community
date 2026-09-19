@@ -7,6 +7,7 @@ import { PostView } from '../lib/store';
 import { formatCount, timeAgo } from '../lib/utils';
 import CommunityAvatar from '../components/CommunityAvatar';
 import MediaImage from '../components/MediaImage';
+import { siteOrigin, useSeo } from '../lib/seo';
 
 export default function CommunityHomePage() {
   const { slug } = useParams();
@@ -53,6 +54,24 @@ export default function CommunityHomePage() {
     setLoading(true);
     refresh();
   }, [refresh]);
+
+  useSeo(
+    community
+      ? {
+          title: community.name,
+          description: community.description,
+          path: `/c/${community.slug}`,
+          keywords: [community.name, ...(community.topics ?? [])],
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: community.name,
+            description: community.description,
+            url: `${siteOrigin()}/c/${community.slug}`,
+          },
+        }
+      : null
+  );
 
   if (loading) return <p className="text-center text-ink-faint py-16">불러오는 중…</p>;
   if (notFound || !community)

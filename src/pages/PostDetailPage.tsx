@@ -7,6 +7,7 @@ import { Community } from '../lib/types';
 import { formatCount, timeAgo } from '../lib/utils';
 import Avatar from '../components/Avatar';
 import AttachmentView from '../components/AttachmentView';
+import { siteOrigin, summarize, useSeo } from '../lib/seo';
 
 export default function PostDetailPage() {
   const { slug, postId } = useParams();
@@ -41,6 +42,65 @@ export default function PostDetailPage() {
     if (postId) store.incrementViews(postId).then(load);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId, user]);
+
+  // 검색 결과에 이 글 하나만 잡히도록, 글 내용으로 메타·구조화 데이터를 만든다
+  const origin = siteOrigin();
+  const postPath = post && community ? `/c/${community.slug}/post/${post.id}` : undefined;
+  useSeo(
+    post && community
+      ? {
+          title: post.title,
+          description: summarize(post.content),
+          path: postPath,
+          type: 'article',
+          author: post.authorNickname,
+          publishedAt: post.createdAt,
+          modifiedAt: post.updatedAt ?? post.createdAt,
+          keywords: [community.name, post.boardName, ...(post.tags ?? [])],
+          jsonLd: [
+            {
+              '@context': 'https://schema.org',
+              '@type': 'DiscussionForumPosting',
+              headline: post.title,
+              articleBody: post.content,
+              url: origin + postPath,
+              datePublished: post.createdAt,
+              dateModified: post.updatedAt ?? post.createdAt,
+              author: { '@type': 'Person', name: post.authorNickname },
+              keywords: (post.tags ?? []).join(', '),
+              isPartOf: { '@type': 'WebSite', name: community.name, url: `${origin}/c/${community.slug}` },
+              interactionStatistic: [
+                {
+                  '@type': 'InteractionCounter',
+                  interactionType: 'https://schema.org/CommentAction',
+                  userInteractionCount: post.commentCount,
+                },
+                {
+                  '@type': 'InteractionCounter',
+                  interactionType: 'https://schema.org/LikeAction',
+                  userInteractionCount: post.likedBy.length,
+                },
+                {
+                  '@type': 'InteractionCounter',
+                  interactionType: 'https://schema.org/ViewAction',
+                  userInteractionCount: post.views,
+                },
+              ],
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: '홈', item: origin },
+                { '@type': 'ListItem', position: 2, name: community.name, item: `${origin}/c/${community.slug}` },
+                { '@type': 'ListItem', position: 3, name: post.boardName, item: `${origin}/c/${community.slug}` },
+                { '@type': 'ListItem', position: 4, name: post.title, item: origin + postPath },
+              ],
+            },
+          ],
+        }
+      : null
+  );
 
   if (loading) return <p className="text-center text-ink-faint py-16">불러오는 중…</p>;
   if (!post || !community)

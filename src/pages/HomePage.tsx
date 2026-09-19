@@ -6,6 +6,7 @@ import CommunityCard from '../components/CommunityCard';
 import CommunityAvatar from '../components/CommunityAvatar';
 import AdSlots from '../components/AdSlots';
 import { formatCount, timeAgo } from '../lib/utils';
+import { getSeoSettings, useSeo } from '../lib/seo';
 
 const SORT_TABS: [FeedSort, string][] = [
   ['hot', '인기'],
@@ -86,6 +87,16 @@ function StatBar({ stats }: { stats: SiteStats }) {
 }
 
 export default function HomePage() {
+  useSeo({
+    title: getSeoSettings().siteName,
+    path: '/',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: getSeoSettings().siteName,
+      url: getSeoSettings().siteUrl || undefined,
+    },
+  });
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
   const tag = params.get('tag') ?? '';

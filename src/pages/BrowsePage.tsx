@@ -4,6 +4,7 @@ import * as store from '../lib/store';
 import { CommunityStat } from '../lib/store';
 import { Community, REGIONS, TOPICS } from '../lib/types';
 import CommunityCard from '../components/CommunityCard';
+import { useSeo } from '../lib/seo';
 
 type Mode = 'topic' | 'region' | 'fan' | 'featured';
 
@@ -52,6 +53,13 @@ export default function BrowsePage() {
       setLoading(false);
     });
   }, [mode, tab, sort]);
+
+  useSeo({
+    title: tab ? `${tab} ${meta.title}` : meta.title,
+    description: meta.desc,
+    path: `/browse/${mode}${tab ? `?tab=${encodeURIComponent(tab)}` : ''}`,
+    keywords: [meta.title, tab].filter(Boolean) as string[],
+  });
 
   const setTab = (t: string) => {
     const next = new URLSearchParams(params);

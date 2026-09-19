@@ -4,6 +4,7 @@ import * as store from '../lib/store';
 import { CommunityStat } from '../lib/store';
 import { formatCount } from '../lib/utils';
 import CommunityAvatar from '../components/CommunityAvatar';
+import { useSeo } from '../lib/seo';
 
 interface Board {
   key: string;
@@ -60,6 +61,7 @@ function RankBoard({ board, data }: { board: Board; data: CommunityStat[] }) {
 }
 
 export default function RankingPage() {
+  useSeo({ title: '커뮤니티 랭킹', description: '실시간으로 가장 활발한 커뮤니티 순위.', path: '/ranking' });
   const [data, setData] = useState<CommunityStat[]>([]);
   const [loading, setLoading] = useState(true);
 
