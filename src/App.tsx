@@ -17,12 +17,13 @@ import MyPage from './pages/MyPage';
 export default function App() {
   return (
     <Routes>
+      {/* 게임 랜드는 전용 다크 레이아웃을 쓰므로 공통 Layout 밖에 둔다 */}
+      <Route path="games" element={<GamesPage />} />
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="explore" element={<ExplorePage />} />
         <Route path="browse/:mode" element={<BrowsePage />} />
         <Route path="ranking" element={<RankingPage />} />
-        <Route path="games" element={<GamesPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignupPage />} />
         <Route path="create" element={<CreateCommunityPage />} />

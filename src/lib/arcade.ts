@@ -373,6 +373,79 @@ export async function deleteComment(commentId: string, password: string): Promis
   commit();
 }
 
+// ---------------- 마이 랜드 ----------------
+//
+// 게임을 즐기고 게시판에서 활동할수록 내 랜드가 자라난다.
+// 포인트는 "이 브라우저의 활동"을 집계한 값이다.
+
+/** 활동 1건당 랜드 포인트 */
+const LAND_WEIGHTS = { xp: 1, post: 25, comment: 10, like: 6 };
+
+export const LAND_STAGES = [
+  { name: '빈 터', at: 0, hint: '아직 아무것도 없는 땅이에요. 게임 한 판이면 시작됩니다.' },
+  { name: '초가집', at: 120, hint: '첫 집이 생겼습니다. 불빛이 하나 켜졌어요.' },
+  { name: '마을 어귀', at: 350, hint: '이웃이 들어오고 나무가 자랐습니다.' },
+  { name: '상점 거리', at: 800, hint: '가게가 문을 열고 가로등이 켜졌어요.' },
+  { name: '아파트 단지', at: 1600, hint: '땅값이 오르는 중입니다. 크레인이 돌아가요.' },
+  { name: '랜드마크 타워', at: 3000, hint: '도시의 상징이 세워졌습니다. 최고 단계예요!' },
+] as const;
+
+export interface LandStats {
+  points: number;
+  /** 항목별 획득 포인트 */
+  breakdown: { games: number; posts: number; comments: number; likes: number };
+  /** 항목별 활동 개수 */
+  counts: { plays: number; posts: number; comments: number; likes: number };
+  /** 0 ~ LAND_STAGES.length - 1 */
+  stage: number;
+  stageName: string;
+  /** 다음 단계 필요 포인트 (최고 단계면 null) */
+  nextAt: number | null;
+  /** 현재 단계 안에서의 진행도 0~1 */
+  progress: number;
+}
+
+export function getLandStats(): LandStats {
+  const me = authorKey();
+  const d = board();
+  const profile = getProfile();
+
+  const myPosts = d.posts.filter((p) => p.authorKey === me);
+  const myComments = d.comments.filter((c) => c.authorKey === me);
+  const likes = myPosts.reduce((a, p) => a + p.likes, 0);
+  const plays = Object.values(profile.records).reduce((a, r) => a + r.plays, 0);
+
+  const breakdown = {
+    games: profile.xp * LAND_WEIGHTS.xp,
+    posts: myPosts.length * LAND_WEIGHTS.post,
+    comments: myComments.length * LAND_WEIGHTS.comment,
+    likes: likes * LAND_WEIGHTS.like,
+  };
+  const points = breakdown.games + breakdown.posts + breakdown.comments + breakdown.likes;
+
+  let stage = 0;
+  for (let i = LAND_STAGES.length - 1; i >= 0; i--) {
+    if (points >= LAND_STAGES[i].at) {
+      stage = i;
+      break;
+    }
+  }
+
+  const isMax = stage === LAND_STAGES.length - 1;
+  const from = LAND_STAGES[stage].at;
+  const nextAt = isMax ? null : LAND_STAGES[stage + 1].at;
+
+  return {
+    points,
+    breakdown,
+    counts: { plays, posts: myPosts.length, comments: myComments.length, likes },
+    stage,
+    stageName: LAND_STAGES[stage].name,
+    nextAt,
+    progress: nextAt === null ? 1 : Math.min(1, (points - from) / (nextAt - from)),
+  };
+}
+
 // ---------------- 데모 시드 ----------------
 
 function seedBoard(): BoardDB {

@@ -2,13 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { GameProps } from './types';
 import { OX_QUESTIONS, OXQuestion } from './quizData';
 
-/** ⭕ OX 퀴즈 — 카지노 룰과 게임 상식을 O/X 로 맞힌다. 연속 정답이면 콤보 보너스. */
+/** ⭕ 카지노 OX 퀴즈 — 카지노 룰·확률·문화를 O/X 로 맞힌다. 연속 정답이면 콤보 보너스. */
 
 const ROUNDS = 10;
 /** 정답 기본 점수 */
 const BASE = 10;
 /** 3연속부터 붙는 콤보 보너스 */
 const COMBO_BONUS = 5;
+
+/** 주제 배지 색 */
+const TOPIC_STYLE: Record<OXQuestion['topic'], string> = {
+  '룰': 'bg-rose-100 text-rose-600',
+  '확률·배당': 'bg-amber-100 text-amber-700',
+  '상식·역사': 'bg-violet-100 text-violet-600',
+};
 
 function pickQuestions(): OXQuestion[] {
   const pool = [...OX_QUESTIONS];
@@ -87,9 +94,9 @@ export default function OXQuiz({ onFinish }: GameProps) {
     return (
       <div className="w-[320px] py-10 text-center">
         <p className="text-5xl mb-3">🎲</p>
-        <p className="font-black text-slate-800 text-lg">카지노 · 게임 OX 퀴즈</p>
+        <p className="font-black text-slate-800 text-lg">카지노 OX 퀴즈</p>
         <p className="text-sm text-slate-500 mt-1 mb-5">
-          카지노 룰과 게임 상식 {ROUNDS}문제
+          카지노 룰 · 확률 · 상식 {ROUNDS}문제
           <br />
           3연속 정답부터 콤보 보너스 +{COMBO_BONUS}점
         </p>
@@ -145,13 +152,9 @@ export default function OXQuiz({ onFinish }: GameProps) {
       </div>
 
       <span
-        className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full mb-2 ${
-          q.category === '카지노 룰'
-            ? 'bg-rose-100 text-rose-600'
-            : 'bg-violet-100 text-violet-600'
-        }`}
+        className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full mb-2 ${TOPIC_STYLE[q.topic]}`}
       >
-        {q.category}
+        {q.topic}
       </span>
 
       <p className="font-bold text-slate-800 leading-relaxed min-h-[72px]">{q.q}</p>
