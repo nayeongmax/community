@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../lib/auth';
+import Avatar from '../components/Avatar';
 import { GAMES } from '../games';
 import { GameDef } from '../games/types';
 import GameModal from '../components/GameModal';
@@ -52,6 +54,7 @@ function GameCard({
 }
 
 export default function GamesPage() {
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState(getProfile);
   const [land, setLand] = useState(getLandStats);
   const [playing, setPlaying] = useState<GameDef | null>(null);
@@ -95,15 +98,38 @@ export default function GamesPage() {
               <Link to="/" className="px-3 py-1.5 rounded-lg text-slate-300 hover:bg-white/10">
                 커뮤니티
               </Link>
+              <Link to="/explore" className="hidden sm:block px-3 py-1.5 rounded-lg text-slate-300 hover:bg-white/10">
+                탐색
+              </Link>
               <Link to="/ranking" className="px-3 py-1.5 rounded-lg text-slate-300 hover:bg-white/10">
                 랭킹
               </Link>
-              <Link
-                to="/me"
-                className="px-3 py-1.5 rounded-lg font-bold bg-white/10 text-white hover:bg-white/20"
-              >
-                내 정보
-              </Link>
+
+              {user ? (
+                <div className="flex items-center gap-1 ml-1">
+                  <Link
+                    to="/me"
+                    className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10"
+                    title="내 정보"
+                  >
+                    <Avatar nickname={user.nickname} color={user.avatarColor} size={26} />
+                    <span className="hidden sm:block font-bold text-white">{user.nickname}</span>
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="text-xs text-slate-400 hover:text-white px-2 py-1"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="ml-1 px-3 py-1.5 rounded-lg font-bold bg-amber-300 text-slate-900 hover:bg-amber-200"
+                >
+                  로그인
+                </Link>
+              )}
             </nav>
           </div>
         </header>
