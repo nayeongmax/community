@@ -1,4 +1,15 @@
-import { Board, Comment, Community, DB, Membership, MemberRole, Post, TOPIC_ALIASES, User } from './types';
+import {
+  Attachment,
+  Board,
+  Comment,
+  Community,
+  DB,
+  Membership,
+  MemberRole,
+  Post,
+  TOPIC_ALIASES,
+  User,
+} from './types';
 import { colorFromString, slugify, uid } from './utils';
 import { seedDB } from './seed';
 
@@ -176,6 +187,19 @@ export async function createCommunity(input: {
 
 // ---------------- Boards ----------------
 
+/** 커뮤니티 겉모습(이모지·대표 이미지·타이틀 이미지·소개) 수정 — 운영자용 */
+export async function updateCommunity(
+  communityId: string,
+  patch: Partial<Pick<Community, 'name' | 'description' | 'emoji' | 'avatarMediaId' | 'titleMediaId'>>
+): Promise<Community> {
+  const d = db();
+  const c = d.communities.find((x) => x.id === communityId);
+  if (!c) throw new Error('커뮤니티를 찾을 수 없습니다.');
+  Object.assign(c, patch);
+  commit();
+  return delay(c);
+}
+
 export async function listBoards(communityId: string): Promise<Board[]> {
   return delay(
     db()
@@ -334,6 +358,7 @@ export async function incrementViews(id: string): Promise<void> {
 }
 
 export async function createPost(input: {
+  attachments?: Attachment[];
   communityId: string;
   boardId: string;
   authorId: string;
@@ -353,6 +378,7 @@ export async function createPost(input: {
     views: 0,
     likedBy: [],
     dislikedBy: [],
+    attachments: input.attachments ?? [],
     createdAt: new Date().toISOString(),
   };
   d.posts.push(post);
@@ -360,12 +386,57 @@ export async function createPost(input: {
   return delay(post);
 }
 
-export async function deletePost(id: string): Promise<void> {
+/** 글 수정 — 작성자만 */
+export async function updatePost(
+  id: string,
+  userId: string,
+  patch: { title: string; content: string; tags?: string[]; boardId?: string; attachments?: Attachment[] }
+): Promise<Post> {
   const d = db();
+  const post = d.posts.find((p) => p.id === id);
+  if (!post) throw new Error('이미 삭제된 글입니다.');
+  if (post.authorId !== userId) throw new Error('글을 수정할 권한이 없습니다.');
+
+  post.title = patch.title.trim();
+  post.content = patch.content;
+  if (patch.tags) post.tags = normalizeTags(patch.tags);
+  if (patch.boardId) post.boardId = patch.boardId;
+  if (patch.attachments) post.attachments = patch.attachments;
+  post.updatedAt = new Date().toISOString();
+  commit();
+  return delay(post);
+}
+
+/**
+ * 글 삭제 — 작성자 본인이거나 그 커뮤니티의 운영자/관리자만.
+ * userId 를 넘기지 않으면 권한 검사를 건너뛴다(게시판 통째 삭제 같은 내부 호출용).
+ */
+export async function deletePost(id: string, userId?: string): Promise<void> {
+  const d = db();
+  const post = d.posts.find((p) => p.id === id);
+  if (!post) return delay(undefined);
+
+  if (userId !== undefined && !canManagePost(d, post, userId)) {
+    throw new Error('글을 삭제할 권한이 없습니다.');
+  }
+
   d.posts = d.posts.filter((p) => p.id !== id);
   d.comments = d.comments.filter((c) => c.postId !== id);
   commit();
   return delay(undefined);
+}
+
+function canManagePost(d: DB, post: Post, userId: string): boolean {
+  if (post.authorId === userId) return true;
+  const ms = d.memberships.find((m) => m.communityId === post.communityId && m.userId === userId);
+  return ms?.role === 'owner' || ms?.role === 'admin';
+}
+
+/** 이 사용자가 글을 지울 수 있는지 (작성자 또는 운영진) */
+export async function canDeletePost(postId: string, userId: string): Promise<boolean> {
+  const d = db();
+  const post = d.posts.find((p) => p.id === postId);
+  return delay(post ? canManagePost(d, post, userId) : false);
 }
 
 export async function togglePostReaction(

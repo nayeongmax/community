@@ -17,7 +17,7 @@ export default function CommunityCard({ c }: { c: CommunityStat }) {
       className="block bg-white rounded-xl border border-hair p-4 transition-colors hover:border-ink/25"
     >
       <div className="flex items-start gap-3">
-        <CommunityAvatar slug={c.slug} emoji={c.emoji} size={44} />
+        <CommunityAvatar slug={c.slug} emoji={c.emoji} mediaId={c.avatarMediaId} size={44} />
         {c.recentPosts > 0 && (
           <span className="ml-auto text-[10px] font-bold text-gold bg-gold-wash px-2 py-0.5 rounded-full shrink-0 tabular-nums">
             오늘 +{c.recentPosts}

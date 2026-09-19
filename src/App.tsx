@@ -33,6 +33,7 @@ export default function App() {
         <Route path="c/:slug" element={<CommunityHomePage />} />
         <Route path="c/:slug/write" element={<PostWritePage />} />
         <Route path="c/:slug/post/:postId" element={<PostDetailPage />} />
+        <Route path="c/:slug/post/:postId/edit" element={<PostWritePage />} />
         <Route path="c/:slug/settings" element={<CommunitySettingsPage />} />
         <Route path="*" element={<HomePage />} />
       </Route>

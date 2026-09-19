@@ -255,7 +255,7 @@ export default function HomePage() {
                   className="shrink-0 w-48 bg-white rounded-xl border border-hair p-3 transition-colors hover:border-ink/25"
                 >
                   <div className="flex items-center gap-2.5">
-                    <CommunityAvatar slug={c.slug} emoji={c.emoji} size={38} />
+                    <CommunityAvatar slug={c.slug} emoji={c.emoji} mediaId={c.avatarMediaId} size={38} />
                     <span className="font-bold text-ink text-sm truncate">{c.name}</span>
                   </div>
                   <div className="mt-2.5 h-1 rounded-full bg-ground overflow-hidden">

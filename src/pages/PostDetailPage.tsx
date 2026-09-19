@@ -6,6 +6,7 @@ import { CommentView, PostView } from '../lib/store';
 import { Community } from '../lib/types';
 import { formatCount, timeAgo } from '../lib/utils';
 import Avatar from '../components/Avatar';
+import AttachmentView from '../components/AttachmentView';
 
 export default function PostDetailPage() {
   const { slug, postId } = useParams();
@@ -17,21 +18,29 @@ export default function PostDetailPage() {
   const [comments, setComments] = useState<CommentView[]>([]);
   const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
+  /** 이 커뮤니티의 운영자/관리자인지 — 모든 글을 삭제할 수 있다 */
+  const [isManager, setIsManager] = useState(false);
 
   const load = useCallback(async () => {
     if (!slug || !postId) return;
     const c = await store.getCommunityBySlug(slug);
     setCommunity(c ?? null);
+    if (c && user) {
+      const ms = await store.getMembership(c.id, user.id);
+      setIsManager(ms?.role === 'owner' || ms?.role === 'admin');
+    } else {
+      setIsManager(false);
+    }
     const p = await store.getPost(postId);
     setPost(p ?? null);
     setComments(await store.listComments(postId));
     setLoading(false);
-  }, [slug, postId]);
+  }, [slug, postId, user]);
 
   useEffect(() => {
     if (postId) store.incrementViews(postId).then(load);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId]);
+  }, [postId, user]);
 
   if (loading) return <p className="text-center text-ink-faint py-16">불러오는 중…</p>;
   if (!post || !community)
@@ -67,12 +76,21 @@ export default function PostDetailPage() {
   };
 
   const removePost = async () => {
-    if (!confirm('게시글을 삭제할까요?')) return;
-    await store.deletePost(post.id);
-    navigate(`/c/${community.slug}`);
+    if (!user) return navigate('/login');
+    const mine = user.id === post.authorId;
+    if (!confirm(mine ? '게시글을 삭제할까요?' : '운영자 권한으로 이 글을 삭제할까요?')) return;
+    try {
+      await store.deletePost(post.id, user.id);
+      navigate(`/c/${community.slug}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '글을 삭제하지 못했습니다.');
+    }
   };
 
-  const canEdit = user && (user.id === post.authorId);
+  /** 작성자 본인만 수정할 수 있다 */
+  const isAuthor = !!user && user.id === post.authorId;
+  /** 작성자이거나 이 커뮤니티 운영진이면 삭제할 수 있다 */
+  const canRemove = isAuthor || isManager;
   const liked = user ? post.likedBy.includes(user.id) : false;
   const disliked = user ? post.dislikedBy.includes(user.id) : false;
 
@@ -93,7 +111,10 @@ export default function PostDetailPage() {
             <Avatar nickname={post.authorNickname} color={post.authorColor} size={34} />
             <div>
               <div className="text-sm font-bold text-ink-soft">{post.authorNickname}</div>
-              <div className="text-xs text-ink-faint">{timeAgo(post.createdAt)}</div>
+              <div className="text-xs text-ink-faint">
+                {timeAgo(post.createdAt)}
+                {post.updatedAt && <span className="ml-1">· 수정됨</span>}
+              </div>
             </div>
           </div>
           <div className="text-xs text-ink-faint text-right">
@@ -104,6 +125,8 @@ export default function PostDetailPage() {
         <div className="py-6 whitespace-pre-wrap leading-relaxed text-ink min-h-[80px]">
           {post.content}
         </div>
+
+        <AttachmentView items={post.attachments} />
 
         {/* 추천/비추천 */}
         <div className="flex flex-col items-center gap-2 py-4">
@@ -140,14 +163,24 @@ export default function PostDetailPage() {
           >
             ← 목록
           </Link>
-          {canEdit && (
-            <button
-              onClick={removePost}
-              className="text-sm text-ink-faint font-semibold hover:text-rose-500"
-            >
-              삭제
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {isAuthor && (
+              <Link
+                to={`/c/${community.slug}/post/${post.id}/edit`}
+                className="text-sm text-ink-mute font-semibold hover:text-ink"
+              >
+                수정
+              </Link>
+            )}
+            {canRemove && (
+              <button
+                onClick={removePost}
+                className="text-sm text-ink-faint font-semibold hover:text-rose-500"
+              >
+                삭제{!isAuthor && <span className="text-[11px] ml-1">(운영자)</span>}
+              </button>
+            )}
+          </div>
         </div>
       </article>
 

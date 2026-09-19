@@ -33,6 +33,10 @@ export interface Community {
   themeColor: string;
   /** 대표 이모지 (미지정이면 slug 로 자동 배정) */
   emoji?: string;
+  /** 대표 이미지 — 있으면 이모지 대신 보여 준다 (media.ts 의 id) */
+  avatarMediaId?: string;
+  /** 커뮤니티 홈 상단 타이틀 이미지 (media.ts 의 id) */
+  titleMediaId?: string;
   ownerId: string;
   isPublic: boolean;
   createdAt: string;
@@ -57,6 +61,18 @@ export interface Membership {
   joinedAt: string;
 }
 
+/** 글에 붙는 이미지·동영상·링크 */
+export interface Attachment {
+  id: string;
+  type: 'image' | 'video' | 'link';
+  /** image · video 면 media.ts 의 id */
+  mediaId?: string;
+  /** link 면 주소 */
+  url?: string;
+  /** 링크 제목 · 파일 이름 */
+  name?: string;
+}
+
 export interface Post {
   id: string;
   communityId: string;
@@ -73,7 +89,11 @@ export interface Post {
   dislikedBy: string[];
   /** 상단 고정 */
   pinned?: boolean;
+  /** 이미지·동영상·링크 첨부 */
+  attachments?: Attachment[];
   createdAt: string;
+  /** 수정한 시각 (수정한 적 있을 때만) */
+  updatedAt?: string;
 }
 
 export interface Comment {

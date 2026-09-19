@@ -5,6 +5,7 @@ import * as store from '../lib/store';
 import { Board, Community, MemberRole } from '../lib/types';
 import { timeAgo } from '../lib/utils';
 import Avatar from '../components/Avatar';
+import CommunityBranding from '../components/CommunityBranding';
 
 export default function CommunitySettingsPage() {
   const { slug } = useParams();
@@ -77,6 +78,8 @@ export default function CommunitySettingsPage() {
           ← {community.name}
         </Link>
       </div>
+
+      <CommunityBranding community={community} onChanged={load} />
 
       {/* 게시판 관리 */}
       <section className="bg-white rounded-2xl border border-hair p-5 mb-4">

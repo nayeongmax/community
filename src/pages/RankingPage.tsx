@@ -44,7 +44,7 @@ function RankBoard({ board, data }: { board: Board; data: CommunityStat[] }) {
                 <span className="w-6 text-center font-black text-ink-faint">
                   {MEDAL[i] ?? i + 1}
                 </span>
-                <CommunityAvatar slug={c.slug} emoji={c.emoji} size={32} />
+                <CommunityAvatar slug={c.slug} emoji={c.emoji} mediaId={c.avatarMediaId} size={32} />
                 <span className="font-semibold text-ink truncate flex-1">{c.name}</span>
                 <span className="text-sm font-bold text-gold shrink-0 tabular-nums">
                   {formatCount(Math.round(v))}

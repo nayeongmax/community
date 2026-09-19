@@ -36,7 +36,7 @@ export default function ExplorePage() {
                 to={`/c/${c.slug}`}
                 className="shrink-0 w-40 bg-white rounded-xl border border-hair p-3 transition-colors hover:border-ink/25"
               >
-                <CommunityAvatar slug={c.slug} emoji={c.emoji} size={40} />
+                <CommunityAvatar slug={c.slug} emoji={c.emoji} mediaId={c.avatarMediaId} size={40} />
                 <div className="mt-2 font-bold text-ink text-sm truncate">{c.name}</div>
                 <div className="text-[11px] text-ink-mute mt-1 tabular-nums">
                   오늘 글 +{c.recentPosts} · 댓글 +{c.recentComments}

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import * as store from '../lib/store';
-import { Board, Community } from '../lib/types';
+import { Attachment, Board, Community } from '../lib/types';
+import AttachmentEditor from '../components/AttachmentEditor';
 
 export default function PostWritePage() {
-  const { slug } = useParams();
+  // postId 가 있으면 수정 모드
+  const { slug, postId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -16,6 +18,7 @@ export default function PostWritePage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tagInput, setTagInput] = useState('');
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -32,6 +35,24 @@ export default function PostWritePage() {
       const isManager = membership?.role === 'owner' || membership?.role === 'admin';
       const writable = all.filter((b) => !b.isNotice || isManager);
       setBoards(writable);
+      if (postId) {
+        // 수정 모드 — 작성자 본인만
+        const p = await store.getPost(postId);
+        if (!p || p.communityId !== c.id) return navigate(`/c/${c.slug}`);
+        if (!user || p.authorId !== user.id) {
+          setError('글을 수정할 권한이 없습니다.');
+          setReady(true);
+          return;
+        }
+        setBoardId(p.boardId);
+        setTitle(p.title);
+        setContent(p.content);
+        setTagInput((p.tags ?? []).join(', '));
+        setAttachments(p.attachments ?? []);
+        setReady(true);
+        return;
+      }
+
       const pref = params.get('b');
       setBoardId(pref && writable.some((b) => b.id === pref) ? pref : writable[0]?.id ?? '');
       setReady(true);
@@ -63,6 +84,12 @@ export default function PostWritePage() {
         .split(/[,\s]+/)
         .map((t) => t.replace(/^#/, '').trim())
         .filter(Boolean);
+      if (postId) {
+        await store.updatePost(postId, user.id, { title, content, tags, boardId, attachments });
+        navigate(`/c/${community.slug}/post/${postId}`);
+        return;
+      }
+
       const post = await store.createPost({
         communityId: community.id,
         boardId,
@@ -70,6 +97,7 @@ export default function PostWritePage() {
         title,
         content,
         tags,
+        attachments,
       });
       navigate(`/c/${community.slug}/post/${post.id}`);
     } catch (err) {
@@ -81,7 +109,9 @@ export default function PostWritePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-black text-ink mb-4">글쓰기 · {community.name}</h1>
+      <h1 className="text-xl font-black text-ink mb-4">
+        {postId ? '글 수정' : '글쓰기'} · {community.name}
+      </h1>
       <form onSubmit={submit} className="bg-white rounded-2xl border border-hair p-5 space-y-4">
         <select
           value={boardId}
@@ -108,6 +138,12 @@ export default function PostWritePage() {
           rows={12}
           className="w-full border border-hair rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-ink/20 resize-y leading-relaxed"
         />
+        {/* 첨부 */}
+        <div>
+          <p className="text-sm font-bold text-ink-soft mb-2">사진 · 동영상 · 링크</p>
+          <AttachmentEditor items={attachments} onChange={setAttachments} />
+        </div>
+
         <div>
           <input
             value={tagInput}
@@ -119,7 +155,7 @@ export default function PostWritePage() {
             태그를 달면 이 글이 메인·검색·같은 태그 피드 등 여러 곳에 노출됩니다. (글 원본은 하나)
           </p>
         </div>
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-rose-500">{error}</p>}
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -132,7 +168,7 @@ export default function PostWritePage() {
             disabled={busy}
             className="bg-ink text-white font-bold px-6 py-2.5 rounded-lg hover:bg-ink-soft disabled:opacity-60"
           >
-            {busy ? '등록 중…' : '등록'}
+            {busy ? '저장 중…' : postId ? '수정 완료' : '등록'}
           </button>
         </div>
       </form>

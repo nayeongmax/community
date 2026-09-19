@@ -6,6 +6,7 @@ import { Board, Community, Membership } from '../lib/types';
 import { PostView } from '../lib/store';
 import { formatCount, timeAgo } from '../lib/utils';
 import CommunityAvatar from '../components/CommunityAvatar';
+import MediaImage from '../components/MediaImage';
 
 export default function CommunityHomePage() {
   const { slug } = useParams();
@@ -89,10 +90,25 @@ export default function CommunityHomePage() {
     <div>
       {/* 커뮤니티 헤더 */}
       <div className="bg-white rounded-2xl border border-hair overflow-hidden mb-4">
-        <div className="h-1" style={{ background: community.themeColor }} />
+        {community.titleMediaId ? (
+          <MediaImage
+            id={community.titleMediaId}
+            alt={`${community.name} 타이틀`}
+            className="w-full object-cover"
+            style={{ aspectRatio: '4 / 1' }}
+          />
+        ) : (
+          <div className="h-1" style={{ background: community.themeColor }} />
+        )}
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
-            <CommunityAvatar slug={community.slug} emoji={community.emoji} size={56} className="rounded-2xl" />
+            <CommunityAvatar
+              slug={community.slug}
+              emoji={community.emoji}
+              mediaId={community.avatarMediaId}
+              size={56}
+              className="rounded-2xl"
+            />
             <div className="flex gap-2">
               {isManager && (
                 <Link
