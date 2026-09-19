@@ -6,13 +6,28 @@
   <title>커뮤니티 — 누구나 만드는 커뮤니티 플랫폼</title>
   <meta name="description" content="누구나 커뮤니티를 개설하고 자유롭게 글을 쓰고 소통할 수 있는 오픈 커뮤니티 플랫폼." />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /* 디자인 토큰 — 잉크(남색 계열) 한 가지를 중심으로, 금색은 포인트로만 쓴다 */
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: { DEFAULT: '#14172b', soft: '#252a45', mute: '#6b7180', faint: '#9aa0b0' },
+            hair: '#e6e8ef',
+            ground: '#f7f8fa',
+            gold: { DEFAULT: '#a87b22', soft: '#f5c765', wash: '#fdf6e6' },
+          },
+        },
+      },
+    };
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Noto Sans KR', system-ui, sans-serif; margin: 0; background: #f1f5f9; }
+    body { font-family: 'Noto Sans KR', system-ui, sans-serif; margin: 0; background: #f7f8fa; color: #14172b; }
     a { text-decoration: none; color: inherit; }
     ::-webkit-scrollbar { width: 10px; height: 10px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb { background: #c9ccd8; border-radius: 5px; }
   </style>
 </head>
 <body>

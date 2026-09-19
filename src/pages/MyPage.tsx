@@ -27,10 +27,10 @@ export default function MyPage() {
   if (!user) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-500 mb-3">로그인이 필요합니다.</p>
+        <p className="text-ink-mute mb-3">로그인이 필요합니다.</p>
         <button
           onClick={() => navigate('/login')}
-          className="bg-indigo-600 text-white font-bold px-5 py-2.5 rounded-lg"
+          className="bg-ink text-white font-bold px-5 py-2.5 rounded-lg"
         >
           로그인
         </button>
@@ -40,37 +40,37 @@ export default function MyPage() {
 
   return (
     <div>
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center gap-4 mb-6">
+      <div className="bg-white rounded-2xl border border-hair p-6 flex items-center gap-4 mb-6">
         <Avatar nickname={user.nickname} color={user.avatarColor} size={56} />
         <div className="flex-1">
-          <div className="text-lg font-black text-slate-800">{user.nickname}</div>
-          <div className="text-sm text-slate-400">{user.email}</div>
+          <div className="text-lg font-black text-ink">{user.nickname}</div>
+          <div className="text-sm text-ink-faint">{user.email}</div>
         </div>
         <button
           onClick={() => {
             logout();
             navigate('/');
           }}
-          className="text-sm text-slate-500 border border-slate-300 px-3 py-2 rounded-lg hover:bg-slate-50 font-semibold"
+          className="text-sm text-ink-mute border border-hair px-3 py-2 rounded-lg hover:bg-ground font-semibold"
         >
           로그아웃
         </button>
       </div>
 
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold text-slate-800">내 커뮤니티</h2>
-        <Link to="/create" className="text-sm font-bold text-indigo-600">
+        <h2 className="text-lg font-bold text-ink">내 커뮤니티</h2>
+        <Link to="/create" className="text-sm font-bold text-ink">
           + 새 커뮤니티
         </Link>
       </div>
 
       {loading ? (
-        <p className="text-center text-slate-400 py-10">불러오는 중…</p>
+        <p className="text-center text-ink-faint py-10">불러오는 중…</p>
       ) : mine.length === 0 ? (
-        <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200">
+        <div className="text-center py-12 text-ink-faint bg-white rounded-2xl border border-hair">
           아직 가입한 커뮤니티가 없어요.
           <div>
-            <Link to="/" className="text-indigo-600 font-semibold mt-2 inline-block">
+            <Link to="/" className="text-ink font-semibold mt-2 inline-block">
               커뮤니티 둘러보기 →
             </Link>
           </div>

@@ -37,14 +37,14 @@ export default function CommunitySettingsPage() {
     load();
   }, [load]);
 
-  if (loading) return <p className="text-center text-slate-400 py-16">불러오는 중…</p>;
+  if (loading) return <p className="text-center text-ink-faint py-16">불러오는 중…</p>;
   if (!community) return null;
   if (!allowed)
     return (
-      <div className="text-center py-16 text-slate-400">
+      <div className="text-center py-16 text-ink-faint">
         이 커뮤니티의 운영자만 접근할 수 있습니다.
         <div>
-          <Link to={`/c/${community.slug}`} className="text-indigo-600 font-semibold mt-2 inline-block">
+          <Link to={`/c/${community.slug}`} className="text-ink font-semibold mt-2 inline-block">
             커뮤니티로 돌아가기
           </Link>
         </div>
@@ -69,32 +69,32 @@ export default function CommunitySettingsPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-black text-slate-800">커뮤니티 관리</h1>
+        <h1 className="text-xl font-black text-ink">커뮤니티 관리</h1>
         <Link
           to={`/c/${community.slug}`}
-          className="text-sm text-slate-500 font-semibold hover:text-slate-800"
+          className="text-sm text-ink-mute font-semibold hover:text-ink"
         >
           ← {community.name}
         </Link>
       </div>
 
       {/* 게시판 관리 */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">
-        <h2 className="font-bold text-slate-700 mb-3">게시판 관리</h2>
+      <section className="bg-white rounded-2xl border border-hair p-5 mb-4">
+        <h2 className="font-bold text-ink-soft mb-3">게시판 관리</h2>
         <ul className="space-y-2 mb-4">
           {boards.map((b) => (
             <li
               key={b.id}
-              className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2"
+              className="flex items-center justify-between bg-ground rounded-lg px-3 py-2"
             >
-              <span className="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                {b.isNotice && <span className="text-red-400">📢</span>}
+              <span className="text-sm font-semibold text-ink-soft flex items-center gap-1">
+                {b.isNotice && <span className="text-gold text-[10px]">●</span>}
                 {b.name}
               </span>
               {!b.isNotice && (
                 <button
                   onClick={() => removeBoard(b)}
-                  className="text-xs text-red-400 hover:text-red-600 font-semibold"
+                  className="text-xs text-ink-faint hover:text-rose-500 font-semibold"
                 >
                   삭제
                 </button>
@@ -108,28 +108,28 @@ export default function CommunitySettingsPage() {
             onChange={(e) => setNewBoard(e.target.value)}
             placeholder="새 게시판 이름"
             maxLength={20}
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 ring-indigo-300 text-sm"
+            className="flex-1 border border-hair rounded-lg px-3 py-2 outline-none focus:ring-2 ring-ink/20 text-sm"
           />
-          <button className="bg-indigo-600 text-white font-bold px-4 rounded-lg hover:bg-indigo-700 text-sm">
+          <button className="bg-ink text-white font-bold px-4 rounded-lg hover:bg-ink-soft text-sm">
             추가
           </button>
         </form>
       </section>
 
       {/* 멤버 목록 */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-5">
-        <h2 className="font-bold text-slate-700 mb-3">멤버 {members.length}명</h2>
+      <section className="bg-white rounded-2xl border border-hair p-5">
+        <h2 className="font-bold text-ink-soft mb-3">멤버 {members.length}명</h2>
         <ul className="space-y-2">
           {members.map((m) => (
             <li key={m.user.id} className="flex items-center gap-2">
               <Avatar nickname={m.user.nickname} color={m.user.avatarColor} size={30} />
-              <span className="text-sm font-semibold text-slate-700">{m.user.nickname}</span>
+              <span className="text-sm font-semibold text-ink-soft">{m.user.nickname}</span>
               {m.role !== 'member' && (
-                <span className="text-[11px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-bold">
+                <span className="text-[11px] bg-ground border border-hair text-ink px-1.5 py-0.5 rounded font-bold">
                   {m.role === 'owner' ? '운영자' : '관리자'}
                 </span>
               )}
-              <span className="text-xs text-slate-400 ml-auto">{timeAgo(m.joinedAt)} 가입</span>
+              <span className="text-xs text-ink-faint ml-auto">{timeAgo(m.joinedAt)} 가입</span>
             </li>
           ))}
         </ul>

@@ -33,9 +33,9 @@ export default function PostDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
-  if (loading) return <p className="text-center text-slate-400 py-16">불러오는 중…</p>;
+  if (loading) return <p className="text-center text-ink-faint py-16">불러오는 중…</p>;
   if (!post || !community)
-    return <div className="text-center py-16 text-slate-400">삭제되었거나 없는 글입니다.</div>;
+    return <div className="text-center py-16 text-ink-faint">삭제되었거나 없는 글입니다.</div>;
 
   const react = async (kind: 'like' | 'dislike') => {
     if (!user) return navigate('/login');
@@ -78,30 +78,30 @@ export default function PostDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-3 text-sm text-slate-500 flex items-center gap-1">
-        <Link to={`/c/${community.slug}`} className="hover:text-indigo-600 font-semibold">
+      <div className="mb-3 text-sm text-ink-mute flex items-center gap-1">
+        <Link to={`/c/${community.slug}`} className="hover:text-ink font-semibold">
           {community.name}
         </Link>
         <span>›</span>
         <span>{post.boardName}</span>
       </div>
 
-      <article className="bg-white rounded-2xl border border-slate-200 p-5">
-        <h1 className="text-xl font-black text-slate-900 leading-snug">{post.title}</h1>
-        <div className="flex items-center justify-between mt-3 pb-3 border-b border-slate-100">
+      <article className="bg-white rounded-2xl border border-hair p-5">
+        <h1 className="text-xl font-black text-ink leading-snug text-balance">{post.title}</h1>
+        <div className="flex items-center justify-between mt-3 pb-3 border-b border-hair">
           <div className="flex items-center gap-2">
             <Avatar nickname={post.authorNickname} color={post.authorColor} size={34} />
             <div>
-              <div className="text-sm font-bold text-slate-700">{post.authorNickname}</div>
-              <div className="text-xs text-slate-400">{timeAgo(post.createdAt)}</div>
+              <div className="text-sm font-bold text-ink-soft">{post.authorNickname}</div>
+              <div className="text-xs text-ink-faint">{timeAgo(post.createdAt)}</div>
             </div>
           </div>
-          <div className="text-xs text-slate-400 text-right">
+          <div className="text-xs text-ink-faint text-right">
             조회 {formatCount(post.views)} · 댓글 {comments.length}
           </div>
         </div>
 
-        <div className="py-6 whitespace-pre-wrap leading-relaxed text-slate-800 min-h-[80px]">
+        <div className="py-6 whitespace-pre-wrap leading-relaxed text-ink min-h-[80px]">
           {post.content}
         </div>
 
@@ -112,8 +112,8 @@ export default function PostDetailPage() {
               onClick={() => react('like')}
               className={`flex flex-col items-center justify-center w-20 h-16 rounded-xl border font-bold transition-colors ${
                 liked
-                  ? 'bg-rose-500 text-white border-rose-500'
-                  : 'bg-white text-rose-500 border-rose-200 hover:bg-rose-50'
+                  ? 'bg-ink text-white border-ink'
+                  : 'bg-white text-ink border-hair hover:border-ink/25'
               }`}
             >
               <span className="text-lg leading-none">▲</span>
@@ -123,8 +123,8 @@ export default function PostDetailPage() {
               onClick={() => react('dislike')}
               className={`flex flex-col items-center justify-center w-20 h-16 rounded-xl border font-bold transition-colors ${
                 disliked
-                  ? 'bg-slate-600 text-white border-slate-600'
-                  : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                  ? 'bg-ink-mute text-white border-ink-mute'
+                  : 'bg-white text-ink-mute border-hair hover:bg-ground'
               }`}
             >
               <span className="text-lg leading-none">▼</span>
@@ -133,17 +133,17 @@ export default function PostDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+        <div className="flex items-center justify-between border-t border-hair pt-3">
           <Link
             to={`/c/${community.slug}`}
-            className="text-sm text-slate-500 font-semibold hover:text-slate-800"
+            className="text-sm text-ink-mute font-semibold hover:text-ink"
           >
             ← 목록
           </Link>
           {canEdit && (
             <button
               onClick={removePost}
-              className="text-sm text-red-400 font-semibold hover:text-red-600"
+              className="text-sm text-ink-faint font-semibold hover:text-rose-500"
             >
               삭제
             </button>
@@ -152,8 +152,8 @@ export default function PostDetailPage() {
       </article>
 
       {/* 댓글 */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-5 mt-4">
-        <h2 className="font-bold text-slate-700 mb-3">댓글 {comments.length}</h2>
+      <section className="bg-white rounded-2xl border border-hair p-5 mt-4">
+        <h2 className="font-bold text-ink-soft mb-3">댓글 {comments.length}</h2>
         <ul className="space-y-4">
           {comments.map((c) => {
             const cLiked = user ? c.likedBy.includes(user.id) : false;
@@ -162,23 +162,23 @@ export default function PostDetailPage() {
                 <Avatar nickname={c.authorNickname} color={c.authorColor} size={32} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-700">{c.authorNickname}</span>
-                    <span className="text-xs text-slate-400">{timeAgo(c.createdAt)}</span>
+                    <span className="text-sm font-bold text-ink-soft">{c.authorNickname}</span>
+                    <span className="text-xs text-ink-faint">{timeAgo(c.createdAt)}</span>
                   </div>
-                  <p className="text-sm text-slate-800 mt-0.5 whitespace-pre-wrap break-words">
+                  <p className="text-sm text-ink mt-0.5 whitespace-pre-wrap break-words">
                     {c.content}
                   </p>
                   <div className="flex items-center gap-3 mt-1 text-xs">
                     <button
                       onClick={() => likeComment(c.id)}
-                      className={`font-semibold ${cLiked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'}`}
+                      className={`font-semibold ${cLiked ? 'text-ink' : 'text-ink-faint hover:text-ink'}`}
                     >
                       ♥ {c.likedBy.length}
                     </button>
                     {user?.id === c.authorId && (
                       <button
                         onClick={() => removeComment(c.id)}
-                        className="text-slate-400 hover:text-red-500"
+                        className="text-ink-faint hover:text-rose-500"
                       >
                         삭제
                       </button>
@@ -189,7 +189,7 @@ export default function PostDetailPage() {
             );
           })}
           {comments.length === 0 && (
-            <li className="text-sm text-slate-400 text-center py-4">첫 댓글을 남겨보세요.</li>
+            <li className="text-sm text-ink-faint text-center py-4">첫 댓글을 남겨보세요.</li>
           )}
         </ul>
 
@@ -199,11 +199,11 @@ export default function PostDetailPage() {
             onChange={(e) => setCommentText(e.target.value)}
             placeholder={user ? '댓글을 입력하세요' : '로그인 후 댓글을 남길 수 있어요'}
             disabled={!user}
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 text-sm disabled:bg-slate-50"
+            className="flex-1 border border-hair rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-ink/20 text-sm disabled:bg-ground"
           />
           <button
             disabled={!user}
-            className="bg-indigo-600 text-white font-bold px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm"
+            className="bg-ink text-white font-bold px-4 rounded-lg hover:bg-ink-soft disabled:opacity-50 text-sm"
           >
             등록
           </button>

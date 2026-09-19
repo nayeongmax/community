@@ -4,14 +4,17 @@ export function uid(prefix = ''): string {
   return prefix + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
-/** 문자열에서 안정적인 파스텔 색상 생성 (아바타/테마용) */
+/**
+ * 문자열에서 안정적인 색상 생성 (아바타/커뮤니티 테마용).
+ * 채도를 낮게 잡아 화면 전체가 알록달록해지지 않도록 한다.
+ */
 export function colorFromString(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 62%, 52%)`;
+  return `hsl(${hue}, 24%, 44%)`;
 }
 
 /** 슬러그 생성 (한글/영문/숫자 허용) */

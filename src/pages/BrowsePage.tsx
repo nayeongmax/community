@@ -68,10 +68,9 @@ export default function BrowsePage() {
   return (
     <div>
       <div className="mb-4">
-        <h1 className="text-xl font-black text-slate-800">
-          {meta.icon} {meta.title}
-        </h1>
-        <p className="text-sm text-slate-500 mt-0.5">{meta.desc}</p>
+        <p className="text-[11px] font-bold tracking-[0.18em] text-ink-faint">BROWSE</p>
+        <h1 className="text-2xl font-black text-ink mt-1">{meta.title}</h1>
+        <p className="text-sm text-ink-mute mt-1">{meta.desc}</p>
       </div>
 
       {/* 가로 슬라이드 탭 */}
@@ -80,8 +79,8 @@ export default function BrowsePage() {
           onClick={() => setTab('')}
           className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-semibold border ${
             !tab
-              ? 'bg-indigo-600 text-white border-indigo-600'
-              : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+              ? 'bg-ink text-white border-ink'
+              : 'bg-white text-ink-mute border-hair hover:border-ink/25'
           }`}
         >
           전체
@@ -92,8 +91,8 @@ export default function BrowsePage() {
             onClick={() => setTab(t)}
             className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-semibold border ${
               tab === t
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+                ? 'bg-ink text-white border-ink'
+                : 'bg-white text-ink-mute border-hair hover:border-ink/25'
             }`}
           >
             {t}
@@ -108,7 +107,7 @@ export default function BrowsePage() {
             key={key}
             onClick={() => setSort(key)}
             className={`px-3 py-1 rounded-full font-semibold ${
-              sort === key ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'
+              sort === key ? 'bg-ink text-white' : 'text-ink-mute hover:bg-ground'
             }`}
           >
             {label}
@@ -117,9 +116,9 @@ export default function BrowsePage() {
       </div>
 
       {loading ? (
-        <p className="text-center text-slate-400 py-16">불러오는 중…</p>
+        <p className="text-center text-ink-faint py-16">불러오는 중…</p>
       ) : list.length === 0 ? (
-        <p className="text-center text-slate-400 py-16 text-sm">
+        <p className="text-center text-ink-faint py-16 text-sm">
           {tab ? `'${tab}' 커뮤니티가 아직 없어요.` : '커뮤니티가 아직 없어요.'}
         </p>
       ) : (

@@ -41,12 +41,12 @@ export default function PostWritePage() {
 
   if (!user)
     return (
-      <div className="text-center py-20 text-slate-500">
+      <div className="text-center py-20 text-ink-mute">
         로그인 후 글을 작성할 수 있습니다.
       </div>
     );
   if (!ready || !community)
-    return <p className="text-center text-slate-400 py-16">불러오는 중…</p>;
+    return <p className="text-center text-ink-faint py-16">불러오는 중…</p>;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,12 +81,12 @@ export default function PostWritePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-black text-slate-800 mb-4">글쓰기 · {community.name}</h1>
-      <form onSubmit={submit} className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+      <h1 className="text-xl font-black text-ink mb-4">글쓰기 · {community.name}</h1>
+      <form onSubmit={submit} className="bg-white rounded-2xl border border-hair p-5 space-y-4">
         <select
           value={boardId}
           onChange={(e) => setBoardId(e.target.value)}
-          className="border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 ring-indigo-300 bg-white text-sm font-semibold"
+          className="border border-hair rounded-lg px-3 py-2 outline-none focus:ring-2 ring-ink/20 bg-white text-sm font-semibold"
         >
           {boards.map((b) => (
             <option key={b.id} value={b.id}>
@@ -99,23 +99,23 @@ export default function PostWritePage() {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목"
           maxLength={120}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 font-semibold"
+          className="w-full border border-hair rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-ink/20 font-semibold"
         />
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="내용을 입력하세요."
           rows={12}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 resize-y leading-relaxed"
+          className="w-full border border-hair rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-ink/20 resize-y leading-relaxed"
         />
         <div>
           <input
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             placeholder="태그 (쉼표/공백으로 구분 · 예: 자동차, 수입차, 정비)"
-            className="w-full border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-indigo-300 text-sm"
+            className="w-full border border-hair rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-ink/20 text-sm"
           />
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-ink-faint mt-1">
             태그를 달면 이 글이 메인·검색·같은 태그 피드 등 여러 곳에 노출됩니다. (글 원본은 하나)
           </p>
         </div>
@@ -124,13 +124,13 @@ export default function PostWritePage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-4 py-2.5 rounded-lg text-slate-600 font-semibold hover:bg-slate-100"
+            className="px-4 py-2.5 rounded-lg text-ink-mute font-semibold hover:bg-ground"
           >
             취소
           </button>
           <button
             disabled={busy}
-            className="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-60"
+            className="bg-ink text-white font-bold px-6 py-2.5 rounded-lg hover:bg-ink-soft disabled:opacity-60"
           >
             {busy ? '등록 중…' : '등록'}
           </button>
