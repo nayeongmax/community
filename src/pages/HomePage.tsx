@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import * as store from '../lib/store';
 import { CommunityStat, FeedSort, PostView, SiteStats } from '../lib/store';
 import CommunityCard from '../components/CommunityCard';
+import CommunityAvatar from '../components/CommunityAvatar';
+import AdSlots from '../components/AdSlots';
 import { formatCount, timeAgo } from '../lib/utils';
 
 const SORT_TABS: [FeedSort, string][] = [
@@ -242,30 +244,38 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-            {trending.map((c, i) => (
-              <Link
-                key={c.id}
-                to={`/c/${c.slug}`}
-                className="shrink-0 w-44 bg-white rounded-xl border border-hair p-3 transition-colors hover:border-ink/25"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-gold tabular-nums">{i + 1}</span>
-                  <span
-                    className="w-9 h-9 rounded-lg grid place-items-center text-white font-black"
-                    style={{ background: c.themeColor }}
-                  >
-                    {c.name.slice(0, 1)}
-                  </span>
-                  <span className="font-bold text-ink text-sm truncate">{c.name}</span>
-                </div>
-                <div className="text-[11px] text-ink-mute mt-2 tabular-nums">
-                  오늘 글 +{c.recentPosts} · 댓글 +{c.recentComments}
-                </div>
-              </Link>
-            ))}
+            {trending.map((c) => {
+              // 오늘 활동량을 1등 대비 비율로 보여 준다 (순위 숫자 대신)
+              const top = Math.max(...trending.map((x) => x.recentPosts + x.recentComments), 1);
+              const heat = (c.recentPosts + c.recentComments) / top;
+              return (
+                <Link
+                  key={c.id}
+                  to={`/c/${c.slug}`}
+                  className="shrink-0 w-48 bg-white rounded-xl border border-hair p-3 transition-colors hover:border-ink/25"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <CommunityAvatar slug={c.slug} emoji={c.emoji} size={38} />
+                    <span className="font-bold text-ink text-sm truncate">{c.name}</span>
+                  </div>
+                  <div className="mt-2.5 h-1 rounded-full bg-ground overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gold-soft"
+                      style={{ width: `${Math.max(12, Math.round(heat * 100))}%` }}
+                    />
+                  </div>
+                  <div className="text-[11px] text-ink-mute mt-1.5 tabular-nums">
+                    오늘 글 +{c.recentPosts} · 댓글 +{c.recentComments}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
+
+      {/* 광고 배너 */}
+      {!tag && <AdSlots className="mb-5" />}
 
       {/* 태그(카테고리) 필터 */}
       <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1">

@@ -1,4 +1,4 @@
-import { Board, Comment, Community, DB, Membership, MemberRole, Post, User } from './types';
+import { Board, Comment, Community, DB, Membership, MemberRole, Post, TOPIC_ALIASES, User } from './types';
 import { colorFromString, slugify, uid } from './utils';
 import { seedDB } from './seed';
 
@@ -18,10 +18,21 @@ function emptyDB(): DB {
   return { users: [], communities: [], boards: [], memberships: [], posts: [], comments: [] };
 }
 
+/** 주제 이름이 바뀐 적이 있어 저장된 데이터를 현재 이름으로 맞춘다 */
+function migrate(d: DB): DB {
+  const fix = (t: string) => TOPIC_ALIASES[t] ?? t;
+  d.communities = d.communities.map((c) => {
+    const topics = [...new Set((c.topics ?? []).map(fix))];
+    return { ...c, topics, category: fix(c.category) };
+  });
+  d.posts = d.posts.map((p) => ({ ...p, tags: [...new Set((p.tags ?? []).map(fix))] }));
+  return d;
+}
+
 function load(): DB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as DB;
+    if (raw) return migrate(JSON.parse(raw) as DB);
   } catch {
     /* ignore */
   }
@@ -102,6 +113,7 @@ export async function createCommunity(input: {
   topics?: string[];
   region?: string;
   kind?: Community['kind'];
+  emoji?: string;
   ownerId: string;
   isPublic: boolean;
 }): Promise<Community> {
@@ -122,6 +134,7 @@ export async function createCommunity(input: {
     region: input.region,
     kind: input.kind ?? 'normal',
     themeColor: colorFromString(input.name + slug),
+    emoji: input.emoji,
     ownerId: input.ownerId,
     isPublic: input.isPublic,
     createdAt: new Date().toISOString(),

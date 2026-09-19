@@ -5,6 +5,7 @@ import * as store from '../lib/store';
 import { Board, Community, Membership } from '../lib/types';
 import { PostView } from '../lib/store';
 import { formatCount, timeAgo } from '../lib/utils';
+import CommunityAvatar from '../components/CommunityAvatar';
 
 export default function CommunityHomePage() {
   const { slug } = useParams();
@@ -91,12 +92,7 @@ export default function CommunityHomePage() {
         <div className="h-1" style={{ background: community.themeColor }} />
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
-            <div
-              className="w-14 h-14 rounded-2xl grid place-items-center text-white text-xl font-black shrink-0"
-              style={{ background: community.themeColor }}
-            >
-              {community.name.slice(0, 1)}
-            </div>
+            <CommunityAvatar slug={community.slug} emoji={community.emoji} size={56} className="rounded-2xl" />
             <div className="flex gap-2">
               {isManager && (
                 <Link

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import * as store from '../lib/store';
 import { CommunityStat } from '../lib/store';
 import { formatCount } from '../lib/utils';
+import CommunityAvatar from '../components/CommunityAvatar';
 
 interface Board {
   key: string;
@@ -43,12 +44,7 @@ function RankBoard({ board, data }: { board: Board; data: CommunityStat[] }) {
                 <span className="w-6 text-center font-black text-ink-faint">
                   {MEDAL[i] ?? i + 1}
                 </span>
-                <span
-                  className="w-8 h-8 rounded-lg grid place-items-center text-white text-sm font-black shrink-0"
-                  style={{ background: c.themeColor }}
-                >
-                  {c.name.slice(0, 1)}
-                </span>
+                <CommunityAvatar slug={c.slug} emoji={c.emoji} size={32} />
                 <span className="font-semibold text-ink truncate flex-1">{c.name}</span>
                 <span className="text-sm font-bold text-gold shrink-0 tabular-nums">
                   {formatCount(Math.round(v))}

@@ -83,8 +83,8 @@ export default function Layout() {
             ['탐색', '/explore'],
             ['주제별', '/browse/topic'],
             ['지역별', '/browse/region'],
-            ['팬', '/browse/fan'],
-            ['대표', '/browse/featured'],
+            ['대표커뮤니티', '/browse/featured'],
+            ['팬클럽', '/browse/fan'],
             ['랭킹', '/ranking'],
           ].map(([label, to]) => (
             <Link

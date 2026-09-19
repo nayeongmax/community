@@ -13,6 +13,7 @@ import PostWritePage from './pages/PostWritePage';
 import PostDetailPage from './pages/PostDetailPage';
 import CommunitySettingsPage from './pages/CommunitySettingsPage';
 import MyPage from './pages/MyPage';
+import AdsPage from './pages/AdsPage';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="signup" element={<SignupPage />} />
         <Route path="create" element={<CreateCommunityPage />} />
         <Route path="me" element={<MyPage />} />
+        <Route path="ads" element={<AdsPage />} />
         <Route path="c/:slug" element={<CommunityHomePage />} />
         <Route path="c/:slug/write" element={<PostWritePage />} />
         <Route path="c/:slug/post/:postId" element={<PostDetailPage />} />

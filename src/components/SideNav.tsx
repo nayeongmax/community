@@ -12,19 +12,18 @@ interface Item {
 
 const FEED: Item[] = [
   { icon: 'home', label: '홈', to: '/', match: (p, s) => p === '/' && !s },
-  { icon: 'live', label: '실시간', to: '/?sort=new', match: (p, s) => p === '/' && s.includes('sort=new') },
   { icon: 'search', label: '탐색', to: '/explore', match: (p) => p.startsWith('/explore') },
   { icon: 'bookmark', label: '구독', to: '/me', match: (p) => p.startsWith('/me') },
-  { icon: 'trending', label: '인기', to: '/?sort=hot', match: (p, s) => p === '/' && s.includes('sort=hot') },
   { icon: 'game', label: '게임 랜드', to: '/games', match: (p) => p.startsWith('/games') },
   { icon: 'chat', label: '채팅', to: '#', match: () => false, soon: true },
 ];
 
-const BROWSE: Item[] = [
+/** 누구나 모임 — 커뮤니티를 찾아다니는 메뉴 */
+const GATHER: Item[] = [
   { icon: 'folder', label: '주제별', to: '/browse/topic', match: (p) => p.startsWith('/browse/topic') },
   { icon: 'pin', label: '지역별', to: '/browse/region', match: (p) => p.startsWith('/browse/region') },
-  { icon: 'heart', label: '팬커뮤니티', to: '/browse/fan', match: (p) => p.startsWith('/browse/fan') },
   { icon: 'crown', label: '대표커뮤니티', to: '/browse/featured', match: (p) => p.startsWith('/browse/featured') },
+  { icon: 'heart', label: '팬클럽', to: '/browse/fan', match: (p) => p.startsWith('/browse/fan') },
   { icon: 'trophy', label: '랭킹', to: '/ranking', match: (p) => p.startsWith('/ranking') },
 ];
 
@@ -65,8 +64,10 @@ export default function SideNav() {
       {FEED.map((it) => (
         <Row key={it.label} item={it} active={it.match(path, search)} />
       ))}
-      <div className="my-2 border-t border-hair" />
-      {BROWSE.map((it) => (
+      <div className="mt-3 mb-1 px-3 pt-3 border-t border-hair">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-ink-faint">누구나 모임</p>
+      </div>
+      {GATHER.map((it) => (
         <Row key={it.label} item={it} active={it.match(path, search)} />
       ))}
       <Link

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { CommunityStat } from '../lib/store';
 import { formatCount } from '../lib/utils';
+import CommunityAvatar from './CommunityAvatar';
 
 const KIND_BADGE: Record<string, { label: string; cls: string }> = {
   fan: { label: '팬', cls: 'bg-ground text-ink-mute border border-hair' },
@@ -16,12 +17,7 @@ export default function CommunityCard({ c }: { c: CommunityStat }) {
       className="block bg-white rounded-xl border border-hair p-4 transition-colors hover:border-ink/25"
     >
       <div className="flex items-start gap-3">
-        <div
-          className="w-11 h-11 rounded-xl grid place-items-center text-white text-lg font-black shrink-0"
-          style={{ background: c.themeColor }}
-        >
-          {c.name.slice(0, 1)}
-        </div>
+        <CommunityAvatar slug={c.slug} emoji={c.emoji} size={44} />
         {c.recentPosts > 0 && (
           <span className="ml-auto text-[10px] font-bold text-gold bg-gold-wash px-2 py-0.5 rounded-full shrink-0 tabular-nums">
             오늘 +{c.recentPosts}

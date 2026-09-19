@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import * as store from '../lib/store';
 import { CommunityKind, REGIONS, TOPICS } from '../lib/types';
+import { EMOJI_CHOICES } from '../lib/emoji';
 
 export default function CreateCommunityPage() {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ export default function CreateCommunityPage() {
   const [region, setRegion] = useState<string>('');
   const [kind, setKind] = useState<CommunityKind>('normal');
   const [isPublic, setIsPublic] = useState(true);
+  const [emoji, setEmoji] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -47,6 +49,7 @@ export default function CreateCommunityPage() {
         name,
         description,
         topics,
+        emoji: emoji || undefined,
         region: region || undefined,
         kind,
         ownerId: user.id,
@@ -78,6 +81,27 @@ export default function CreateCommunityPage() {
             className="w-full border border-hair rounded-lg px-3 py-2.5 outline-none focus:ring-2 ring-ink/20"
           />
         </div>
+        <div>
+          <label className="block text-sm font-bold text-ink-soft mb-1.5">
+            대표 이모지{' '}
+            <span className="text-ink-faint font-normal">(안 고르면 자동으로 배정됩니다)</span>
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {EMOJI_CHOICES.slice(0, 18).map((e) => (
+              <button
+                type="button"
+                key={e}
+                onClick={() => setEmoji(emoji === e ? '' : e)}
+                className={`w-9 h-9 rounded-lg text-lg grid place-items-center border transition-colors ${
+                  emoji === e ? 'border-ink bg-ground' : 'border-hair hover:border-ink/25'
+                }`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-bold text-ink-soft mb-1.5">
             주제 <span className="text-ink-faint font-normal">(최대 3개 · 여러 주제 페이지에 노출됩니다)</span>

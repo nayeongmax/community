@@ -31,6 +31,8 @@ export interface Community {
   kind: CommunityKind;
   /** 커버/테마 색 */
   themeColor: string;
+  /** 대표 이모지 (미지정이면 slug 로 자동 배정) */
+  emoji?: string;
   ownerId: string;
   isPublic: boolean;
   createdAt: string;
@@ -110,10 +112,9 @@ export const CATEGORIES = [
   '기타',
 ] as const;
 
-/** 크게 묶은 대주제 (주제별 카페 탐색용) */
+/** 크게 묶은 대주제 (주제별 카페 탐색용) — 12개라 4열 3행으로 떨어진다 */
 export const TOPICS = [
-  '생활',
-  '취미',
+  '생활/취미',
   '게임',
   '자동차',
   '투자',
@@ -124,8 +125,15 @@ export const TOPICS = [
   '스포츠',
   '음식',
   '교육',
-  'IT',
+  '부업/수익화',
 ] as const;
+
+/** 예전 주제 이름 → 현재 이름 (저장된 데이터를 읽을 때 맞춰준다) */
+export const TOPIC_ALIASES: Record<string, string> = {
+  생활: '생활/취미',
+  취미: '생활/취미',
+  IT: '부업/수익화',
+};
 
 /** 지역 (지역별 카페 탐색용) */
 export const REGIONS = [

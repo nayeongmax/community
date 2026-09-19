@@ -10,7 +10,7 @@ type Mode = 'topic' | 'region' | 'fan' | 'featured';
 const META: Record<Mode, { icon: string; title: string; desc: string }> = {
   topic: { icon: '📁', title: '주제별 커뮤니티', desc: '관심 주제로 커뮤니티를 찾아보세요.' },
   region: { icon: '📍', title: '지역별 커뮤니티', desc: '내 동네·지역 커뮤니티를 찾아보세요.' },
-  fan: { icon: '❤️', title: '인기 팬커뮤니티', desc: '스타·팀·크리에이터 팬들이 모인 곳.' },
+  fan: { icon: '❤️', title: '팬클럽', desc: '스타·팀·크리에이터 팬들이 모인 곳.' },
   featured: { icon: '👑', title: '대표 커뮤니티', desc: '활발하게 운영되는 대표 커뮤니티.' },
 };
 

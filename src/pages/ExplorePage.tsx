@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import * as store from '../lib/store';
 import { CommunityStat } from '../lib/store';
 import { REGIONS, TOPICS } from '../lib/types';
+import CommunityAvatar from '../components/CommunityAvatar';
 
 const TOPIC_EMOJI: Record<string, string> = {
-  생활: '🏡', 취미: '🎨', 게임: '🎮', 자동차: '🚗', 투자: '📈', 부동산: '🏢',
-  건강: '💪', 여행: '✈️', 엔터: '🎬', 스포츠: '⚽', 음식: '🍜', 교육: '📚', IT: '💻',
+  '생활/취미': '🏡', 게임: '🎮', 자동차: '🚗', 투자: '📈', 부동산: '🏢',
+  건강: '💪', 여행: '✈️', 엔터: '🎬', 스포츠: '⚽', 음식: '🍜', 교육: '📚',
+  '부업/수익화': '💰',
 };
 
 export default function ExplorePage() {
@@ -34,12 +36,7 @@ export default function ExplorePage() {
                 to={`/c/${c.slug}`}
                 className="shrink-0 w-40 bg-white rounded-xl border border-hair p-3 transition-colors hover:border-ink/25"
               >
-                <div
-                  className="w-10 h-10 rounded-lg grid place-items-center text-white font-black"
-                  style={{ background: c.themeColor }}
-                >
-                  {c.name.slice(0, 1)}
-                </div>
+                <CommunityAvatar slug={c.slug} emoji={c.emoji} size={40} />
                 <div className="mt-2 font-bold text-ink text-sm truncate">{c.name}</div>
                 <div className="text-[11px] text-ink-mute mt-1 tabular-nums">
                   오늘 글 +{c.recentPosts} · 댓글 +{c.recentComments}
