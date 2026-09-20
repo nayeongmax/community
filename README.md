@@ -3,22 +3,19 @@
 누구나 커뮤니티를 개설하고, 게시판을 열고, 자유롭게 글을 쓰고 소통할 수 있는
 **오픈 커뮤니티 플랫폼**입니다.
 
-현재 **네이버·구글 검색 노출을 위해 Next.js 서버 렌더링으로 옮기는 중**입니다.
-아래 "지금 상태" 를 먼저 읽어 주세요.
+**Next.js 서버 렌더링**으로 동작합니다. 글 하나하나가 고유 주소를 갖고,
+검색로봇이 요청하면 자바스크립트 없이도 본문이 담긴 HTML 이 나갑니다.
 
-## 🚦 지금 상태
+## ✨ 주요 기능
 
-| | 어디서 도는가 | 상태 |
-| --- | --- | --- |
-| 홈 · 커뮤니티 · **글 상세** · 탐색 · 랭킹 · 주제별 | **Next.js (서버 렌더링)** | ✅ 완료 |
-| sitemap.xml · robots.txt · rss.xml | Next.js (서버 생성) | ✅ 완료 |
-| 로그인 · 회원가입 · 커뮤니티 개설 · 가입 | **Next.js (Server Actions)** | ✅ 완료 |
-| 글쓰기 · 수정 · 삭제 · 댓글 · 추천 | **Next.js (Server Actions)** | ✅ 완료 |
-| 커뮤니티 관리(게시판·꾸미기) | 구 SPA (`legacy/`) | ⏳ 이전 남음 |
-| 게임 랜드 · 익명 게시판 · 광고 배너 | 구 SPA (`legacy/`) | ⏳ 이전 남음 |
-
-- 새 앱: `app/` (Next.js App Router) + `lib/server/` (서버 데이터)
-- 구 앱: `legacy/` (Vite SPA · `npm run dev:spa` 로 그대로 실행 가능)
+| 기능 | 어디에 저장되나 |
+| --- | --- |
+| 커뮤니티 개설·가입, 게시판, 글·댓글·추천 | 서버 |
+| 사진·동영상·링크 첨부 | 서버 (`public/uploads`) |
+| 커뮤니티 꾸미기 (대표 이미지·타이틀 이미지) | 서버 |
+| 익명 자유게시판 | 서버 (익명 신원은 쿠키) |
+| 광고 배너 | 서버 |
+| 미니게임 12종 기록·XP·마이 랜드 | 브라우저 (개인 기록) |
 
 ## 🔎 검색 노출 — 무엇이 달라졌나
 
@@ -88,11 +85,11 @@ Supabase Auth 같은 인증 서비스로 바꿔야 합니다.
 
 ```bash
 npm install
-npm run dev          # Next.js  → http://localhost:3000
+npm run dev              # http://localhost:3000
 npm run build && npm start
-
-npm run dev:spa      # 구 SPA   → http://localhost:5190 (게임·글쓰기 등)
 ```
+
+데모 계정: `admin@demo.com` / `1234`
 
 ## 🗄 데이터 저장 방식
 
@@ -127,9 +124,25 @@ lib/
 ├─ server/db.ts           # 서버 데이터 (Supabase 교체 지점)
 ├─ server/queries.ts      # 화면용 조회 함수
 ├─ site.ts · types.ts · seed.ts · utils.ts · emoji.ts
-legacy/                   # 구 Vite SPA (게임·글쓰기 등 이전 예정)
+├─ games/ · ads/ · me/ · login · signup · create
+components/               # 화면 조각 (client)
+games/                    # 미니게임 12종
+lib/
+├─ server/actions.ts      # 쓰기 동작 (Server Actions) · 권한 검사
+├─ server/uploads.ts      # 파일 저장 (S3 교체 지점)
+├─ server/board.ts        # 익명 게시판
+└─ server/ads.ts          # 광고 배너
 ```
 
 ## 🛠 기술 스택
 
 Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · (선택) Supabase
+
+## 🎮 게임 랜드 (`/games`)
+
+미니게임 12종(다트·룰렛·슬롯·복권·파이프·스네이크·브레이크아웃·풍선·반응속도·
+짝 맞추기·일반상식 퀴즈·카지노 OX 퀴즈)과 익명 자유게시판이 한 화면에 있습니다.
+게임 XP와 게시판 활동을 합쳐 **마이 랜드**가 6단계로 자랍니다.
+
+게임 기록은 개인적인 데이터라 브라우저에 두고, 익명 게시판 글은 서로 보여야 하므로
+서버에 저장합니다.

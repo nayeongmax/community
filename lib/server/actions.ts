@@ -430,3 +430,58 @@ export async function deleteCommentAction(
   });
   revalidatePath(`/c/${slug}/post/${postId}`);
 }
+
+// ---------------- 광고 배너 ----------------
+
+export async function createBannerAction(
+  _prev: ActionState,
+  form: FormData
+): Promise<ActionState> {
+  const title = String(form.get('title') ?? '').trim();
+  const image = String(form.get('image') ?? '');
+  const link = String(form.get('link') ?? '').trim() || undefined;
+
+  if (!title) return { error: '배너 이름을 입력해 주세요.' };
+  if (!image) return { error: '이미지를 올려 주세요.' };
+
+  const { newBanner, readAds, writeAds } = await import('./ads');
+  const list = await readAds();
+  list.push(newBanner({ title, image, link }));
+  await writeAds(list);
+
+  revalidatePath('/');
+  revalidatePath('/ads');
+  return { ok: true };
+}
+
+export async function moveBannerAction(id: string, dir: -1 | 1): Promise<void> {
+  const { readAds, writeAds } = await import('./ads');
+  const list = await readAds();
+  const i = list.findIndex((b) => b.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  await writeAds(list);
+  revalidatePath('/');
+  revalidatePath('/ads');
+}
+
+export async function toggleBannerAction(id: string): Promise<void> {
+  const { readAds, writeAds } = await import('./ads');
+  const list = await readAds();
+  const b = list.find((x) => x.id === id);
+  if (b) b.active = !b.active;
+  await writeAds(list);
+  revalidatePath('/');
+  revalidatePath('/ads');
+}
+
+export async function deleteBannerAction(id: string): Promise<void> {
+  const { readAds, writeAds } = await import('./ads');
+  const list = await readAds();
+  const target = list.find((b) => b.id === id);
+  if (target) await removeUpload(target.image);
+  await writeAds(list.filter((b) => b.id !== id));
+  revalidatePath('/');
+  revalidatePath('/ads');
+}
