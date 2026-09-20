@@ -8,10 +8,12 @@ import { redirect } from 'next/navigation';
 import { Attachment, Board, Comment, Community, Membership, Post, User } from '../types';
 import { colorFromString, slugify, uid } from '../utils';
 import { mutate, read } from './db';
+import { removeUpload, saveUpload } from './uploads';
 import { clearSession, currentUser, setSession } from './session';
 
 export interface ActionState {
   error?: string;
+  ok?: boolean;
 }
 
 const normalizeTags = (tags: string[]): string[] =>
@@ -64,6 +66,31 @@ export async function logoutAction(): Promise<void> {
   await clearSession();
   revalidatePath('/');
   redirect('/');
+}
+
+// ---------------- 파일 업로드 ----------------
+
+export interface UploadResult {
+  url?: string;
+  type?: 'image' | 'video';
+  name?: string;
+  error?: string;
+}
+
+/** 글 첨부·커뮤니티 이미지 업로드 (서버에 저장하므로 모두에게 보인다) */
+export async function uploadAction(form: FormData): Promise<UploadResult> {
+  const me = await currentUser();
+  if (!me) return { error: '로그인이 필요합니다.' };
+
+  const file = form.get('file');
+  if (!(file instanceof File) || file.size === 0) return { error: '파일을 골라 주세요.' };
+
+  try {
+    const saved = await saveUpload(file);
+    return { url: saved.url, type: saved.type, name: saved.name };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : '파일을 올리지 못했습니다.' };
+  }
 }
 
 // ---------------- 커뮤니티 ----------------
@@ -165,15 +192,24 @@ export async function updateCommunityAction(
 
   const description = String(form.get('description') ?? '').trim();
   const emoji = String(form.get('emoji') ?? '');
+  const avatarUrl = String(form.get('avatarUrl') ?? '');
+  const titleUrl = String(form.get('titleUrl') ?? '');
+
+  // 바뀐 이미지의 예전 파일은 지운다
+  if (avatarUrl !== (community.avatarUrl ?? '')) await removeUpload(community.avatarUrl);
+  if (titleUrl !== (community.titleUrl ?? '')) await removeUpload(community.titleUrl);
 
   await mutate((d) => {
     const c = d.communities.find((x) => x.id === communityId)!;
     c.description = description;
-    if (emoji) c.emoji = emoji;
+    c.emoji = emoji || undefined;
+    c.avatarUrl = avatarUrl || undefined;
+    c.titleUrl = titleUrl || undefined;
   });
 
   revalidatePath(`/c/${community.slug}`);
-  return {};
+  revalidatePath(`/c/${community.slug}/settings`);
+  return { ok: true };
 }
 
 export async function createBoardAction(communityId: string, slug: string, name: string): Promise<void> {

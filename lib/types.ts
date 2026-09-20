@@ -33,10 +33,10 @@ export interface Community {
   themeColor: string;
   /** 대표 이모지 (미지정이면 slug 로 자동 배정) */
   emoji?: string;
-  /** 대표 이미지 — 있으면 이모지 대신 보여 준다 (media.ts 의 id) */
-  avatarMediaId?: string;
-  /** 커뮤니티 홈 상단 타이틀 이미지 (media.ts 의 id) */
-  titleMediaId?: string;
+  /** 대표 이미지 주소 — 있으면 이모지 대신 보여 준다 */
+  avatarUrl?: string;
+  /** 커뮤니티 홈 상단 타이틀 이미지 주소 */
+  titleUrl?: string;
   ownerId: string;
   isPublic: boolean;
   createdAt: string;
@@ -65,10 +65,8 @@ export interface Membership {
 export interface Attachment {
   id: string;
   type: 'image' | 'video' | 'link';
-  /** image · video 면 media.ts 의 id */
-  mediaId?: string;
-  /** link 면 주소 */
-  url?: string;
+  /** 파일 주소(/uploads/...) 또는 링크 주소 */
+  url: string;
   /** 링크 제목 · 파일 이름 */
   name?: string;
 }

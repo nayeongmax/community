@@ -27,6 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const url = `/c/${slug}/post/${id}`;
   const description = summarize(post.content);
+  // 글에 붙은 첫 이미지를 공유 카드 이미지로 쓴다
+  const image = (post.attachments ?? []).find((a) => a.type === 'image')?.url;
 
   return {
     title: post.title,
@@ -42,8 +44,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.createdAt,
       modifiedTime: post.updatedAt ?? post.createdAt,
       authors: [post.authorNickname],
+      images: image ? [image] : undefined,
     },
-    twitter: { card: 'summary_large_image', title: post.title, description },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
 }
 
@@ -77,6 +85,9 @@ export default async function PostPage({ params }: Props) {
       datePublished: post.createdAt,
       dateModified: post.updatedAt ?? post.createdAt,
       author: { '@type': 'Person', name: post.authorNickname },
+      image: (post.attachments ?? [])
+        .filter((a) => a.type === 'image')
+        .map((a) => site.url + a.url),
       keywords: (post.tags ?? []).join(', '),
       isPartOf: {
         '@type': 'WebSite',
@@ -145,6 +156,39 @@ export default async function PostPage({ params }: Props) {
         </div>
 
         <div className="py-6 whitespace-pre-wrap leading-relaxed text-ink">{post.content}</div>
+
+        {(post.attachments ?? []).length > 0 && (
+          <div className="space-y-3 pb-4">
+            {(post.attachments ?? []).map((a) =>
+              a.type === 'link' ? (
+                <a
+                  key={a.id}
+                  href={a.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl border border-hair px-3.5 py-3 hover:border-ink/25"
+                >
+                  <span>🔗</span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-ink truncate">{a.name}</span>
+                    <span className="block text-[11px] text-ink-faint truncate">{a.url}</span>
+                  </span>
+                </a>
+              ) : a.type === 'video' ? (
+                <video key={a.id} src={a.url} controls className="w-full rounded-xl border border-hair bg-black" />
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  key={a.id}
+                  src={a.url}
+                  alt={a.name ?? '첨부 이미지'}
+                  className="w-full rounded-xl border border-hair"
+                  loading="lazy"
+                />
+              )
+            )}
+          </div>
+        )}
 
         {(post.tags ?? []).length > 0 && (
           <div className="flex flex-wrap gap-1.5 pb-4">

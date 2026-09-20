@@ -25,7 +25,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: c.description,
     keywords: [c.name, ...(c.topics ?? [])],
     alternates: { canonical: `/c/${slug}` },
-    openGraph: { title: c.name, description: c.description, url: `/c/${slug}` },
+    openGraph: {
+      title: c.name,
+      description: c.description,
+      url: `/c/${slug}`,
+      images: c.titleUrl ? [c.titleUrl] : undefined,
+    },
   };
 }
 
@@ -64,11 +69,30 @@ export default async function CommunityPage({ params }: Props) {
       />
 
       <header className="bg-white rounded-2xl border border-hair overflow-hidden mb-4">
-        <div className="h-1" style={{ background: community.themeColor }} />
+        {community.titleUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={community.titleUrl}
+            alt={`${community.name} 타이틀`}
+            className="w-full object-cover"
+            style={{ aspectRatio: '4 / 1' }}
+          />
+        ) : (
+          <div className="h-1" style={{ background: community.themeColor }} />
+        )}
         <div className="p-5 flex items-start gap-3">
-          <span className="w-14 h-14 rounded-2xl bg-ground border border-hair grid place-items-center text-2xl shrink-0">
-            {community.emoji || communityEmoji(community.slug)}
-          </span>
+          {community.avatarUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={community.avatarUrl}
+              alt=""
+              className="w-14 h-14 rounded-2xl object-cover border border-hair shrink-0"
+            />
+          ) : (
+            <span className="w-14 h-14 rounded-2xl bg-ground border border-hair grid place-items-center text-2xl shrink-0">
+              {community.emoji || communityEmoji(community.slug)}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
               <h1 className="text-xl font-black text-ink">{community.name}</h1>

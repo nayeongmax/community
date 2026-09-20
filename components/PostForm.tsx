@@ -2,9 +2,10 @@
 
 import { useActionState, useState } from 'react';
 import Link from 'next/link';
-import { Board } from '../lib/types';
+import { Attachment, Board } from '../lib/types';
 import { writePostAction } from '../lib/server/actions';
 import SubmitButton from './SubmitButton';
+import AttachmentField from './AttachmentField';
 
 interface PostLike {
   id: string;
@@ -12,6 +13,7 @@ interface PostLike {
   content: string;
   tags: string[];
   boardId: string;
+  attachments?: Attachment[];
 }
 
 /** 글쓰기 · 글수정 공용 폼 (서버에서 저장한다) */
@@ -67,6 +69,11 @@ export default function PostForm({
         rows={12}
         className={`${field} resize-y leading-relaxed`}
       />
+
+      <div>
+        <p className="text-sm font-bold text-ink-soft mb-2">사진 · 동영상 · 링크</p>
+        <AttachmentField initial={post?.attachments} />
+      </div>
 
       <div>
         <input
