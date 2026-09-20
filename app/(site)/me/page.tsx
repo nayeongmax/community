@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { read } from '../../../lib/server/db';
+import { repo } from '../../../lib/server/repo';
 import { listCommunities } from '../../../lib/server/queries';
 import { currentUser } from '../../../lib/server/session';
 import { communityEmoji, userEmoji } from '../../../lib/emoji';
@@ -11,14 +11,14 @@ export default async function MyPage() {
   const me = await currentUser();
   if (!me) redirect('/login');
 
-  const db = await read();
-  const all = await listCommunities();
-  const mine = db.memberships
-    .filter((m) => m.userId === me.id)
+  const [all, memberships, myPosts] = await Promise.all([
+    listCommunities(),
+    repo.listMembershipsOfUser(me.id),
+    repo.listPostsOfAuthor(me.id),
+  ]);
+  const mine = memberships
     .map((m) => ({ role: m.role, community: all.find((c) => c.id === m.communityId)! }))
     .filter((x) => x.community);
-
-  const myPosts = db.posts.filter((p) => p.authorId === me.id);
 
   return (
     <div className="max-w-2xl mx-auto">

@@ -1,8 +1,8 @@
 // 서버에서 화면을 그릴 때 쓰는 조회 함수들.
 // 모두 서버에서만 실행되므로, 여기서 만든 HTML 에는 글 본문이 그대로 들어간다.
 
-import { Community, Post, User } from '../types';
-import { read } from './db';
+import { Community, Post } from '../types';
+import { repo } from './repo';
 
 export interface PostDetail extends Post {
   authorNickname: string;
@@ -25,98 +25,91 @@ export interface CommunityDetail extends Community {
   postCount: number;
 }
 
-function nickname(users: User[], id: string): string {
-  return users.find((u) => u.id === id)?.nickname ?? '(탈퇴)';
+/** 글 목록에 작성자·게시판·커뮤니티 이름과 댓글 수를 붙인다 */
+async function decorate(posts: Post[]): Promise<PostDetail[]> {
+  if (posts.length === 0) return [];
+
+  const [users, communities, counts] = await Promise.all([
+    repo.listUsersByIds([...new Set(posts.map((p) => p.authorId))]),
+    repo.listCommunities(),
+    repo.countComments(posts.map((p) => p.id)),
+  ]);
+
+  // 게시판 이름은 커뮤니티별로 한 번씩만 불러온다
+  const boardsByCommunity = new Map<string, Awaited<ReturnType<typeof repo.listBoards>>>();
+  for (const id of new Set(posts.map((p) => p.communityId))) {
+    boardsByCommunity.set(id, await repo.listBoards(id));
+  }
+
+  const userName = new Map(users.map((u) => [u.id, u.nickname]));
+  const community = new Map(communities.map((c) => [c.id, c]));
+
+  return posts.map((p) => {
+    const c = community.get(p.communityId);
+    const board = boardsByCommunity.get(p.communityId)?.find((b) => b.id === p.boardId);
+    return {
+      ...p,
+      authorNickname: userName.get(p.authorId) ?? '(탈퇴)',
+      boardName: board?.name ?? '',
+      communityName: c?.name ?? '(삭제된 커뮤니티)',
+      communitySlug: c?.slug ?? '',
+      commentCount: counts[p.id] ?? 0,
+    };
+  });
 }
 
-export async function getCommunityBySlug(slug: string): Promise<CommunityDetail | null> {
-  const db = await read();
-  const c = db.communities.find((x) => x.slug === slug);
-  if (!c) return null;
-  return {
+async function withStats(communities: Community[]): Promise<CommunityDetail[]> {
+  const ids = communities.map((c) => c.id);
+  const [members, posts] = await Promise.all([repo.countMembers(ids), repo.countPosts(ids)]);
+  return communities.map((c) => ({
     ...c,
-    members: db.memberships.filter((m) => m.communityId === c.id).length,
-    postCount: db.posts.filter((p) => p.communityId === c.id).length,
-  };
-}
-
-export async function listCommunities(): Promise<CommunityDetail[]> {
-  const db = await read();
-  return db.communities.map((c) => ({
-    ...c,
-    members: db.memberships.filter((m) => m.communityId === c.id).length,
-    postCount: db.posts.filter((p) => p.communityId === c.id).length,
+    members: members[c.id] ?? 0,
+    postCount: posts[c.id] ?? 0,
   }));
 }
 
+export async function getCommunityBySlug(slug: string): Promise<CommunityDetail | null> {
+  const c = await repo.getCommunityBySlug(slug);
+  if (!c) return null;
+  return (await withStats([c]))[0];
+}
+
+export async function listCommunities(): Promise<CommunityDetail[]> {
+  return withStats(await repo.listCommunities());
+}
+
 export async function getPost(id: string): Promise<PostDetail | null> {
-  const db = await read();
-  const p = db.posts.find((x) => x.id === id);
-  if (!p) return null;
-  const community = db.communities.find((c) => c.id === p.communityId);
-  return {
-    ...p,
-    authorNickname: nickname(db.users, p.authorId),
-    boardName: db.boards.find((b) => b.id === p.boardId)?.name ?? '',
-    communityName: community?.name ?? '',
-    communitySlug: community?.slug ?? '',
-    commentCount: db.comments.filter((c) => c.postId === p.id).length,
-  };
+  const post = await repo.getPost(id);
+  if (!post) return null;
+  return (await decorate([post]))[0];
 }
 
 export async function listComments(postId: string): Promise<CommentDetail[]> {
-  const db = await read();
-  return db.comments
-    .filter((c) => c.postId === postId)
-    .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt))
-    .map((c) => ({
-      id: c.id,
-      content: c.content,
-      authorNickname: nickname(db.users, c.authorId),
-      createdAt: c.createdAt,
-      likes: c.likedBy.length,
-    }));
+  const comments = await repo.listComments(postId);
+  const users = await repo.listUsersByIds([...new Set(comments.map((c) => c.authorId))]);
+  const name = new Map(users.map((u) => [u.id, u.nickname]));
+
+  return comments.map((c) => ({
+    id: c.id,
+    content: c.content,
+    authorNickname: name.get(c.authorId) ?? '(탈퇴)',
+    createdAt: c.createdAt,
+    likes: c.likedBy.length,
+  }));
 }
 
 export async function listPostsOfCommunity(
   communityId: string,
   boardId?: string
 ): Promise<PostDetail[]> {
-  const db = await read();
-  return db.posts
-    .filter((p) => p.communityId === communityId && (!boardId || p.boardId === boardId))
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-    .map((p) => ({
-      ...p,
-      authorNickname: nickname(db.users, p.authorId),
-      boardName: db.boards.find((b) => b.id === p.boardId)?.name ?? '',
-      communityName: db.communities.find((c) => c.id === p.communityId)?.name ?? '',
-      communitySlug: db.communities.find((c) => c.id === p.communityId)?.slug ?? '',
-      commentCount: db.comments.filter((c) => c.postId === p.id).length,
-    }));
+  return decorate(await repo.listPosts({ communityId, boardId }));
 }
 
 /** 홈·사이트맵·RSS 에서 쓰는 전체 글 */
-export async function listAllPosts(): Promise<PostDetail[]> {
-  const db = await read();
-  return db.posts
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-    .map((p) => {
-      const community = db.communities.find((c) => c.id === p.communityId);
-      return {
-        ...p,
-        authorNickname: nickname(db.users, p.authorId),
-        boardName: db.boards.find((b) => b.id === p.boardId)?.name ?? '',
-        communityName: community?.name ?? '',
-        communitySlug: community?.slug ?? '',
-        commentCount: db.comments.filter((c) => c.postId === p.id).length,
-      };
-    });
+export async function listAllPosts(limit?: number): Promise<PostDetail[]> {
+  return decorate(await repo.listPosts({ limit }));
 }
 
 export async function listBoards(communityId: string) {
-  const db = await read();
-  return db.boards
-    .filter((b) => b.communityId === communityId)
-    .sort((a, b) => a.order - b.order);
+  return repo.listBoards(communityId);
 }

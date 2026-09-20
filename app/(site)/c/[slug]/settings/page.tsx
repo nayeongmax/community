@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { read } from '../../../../../lib/server/db';
+import { repo } from '../../../../../lib/server/repo';
 import { getCommunityBySlug, listBoards } from '../../../../../lib/server/queries';
 import { currentUser, isManager, myRole } from '../../../../../lib/server/session';
 import { userEmoji } from '../../../../../lib/emoji';
@@ -33,10 +33,13 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
     );
   }
 
-  const [boards, db] = await Promise.all([listBoards(community.id), read()]);
-  const members = db.memberships
-    .filter((m) => m.communityId === community.id)
-    .map((m) => ({ ...m, user: db.users.find((u) => u.id === m.userId) }))
+  const [boards, memberships] = await Promise.all([
+    listBoards(community.id),
+    repo.listMemberships(community.id),
+  ]);
+  const users = await repo.listUsersByIds(memberships.map((m) => m.userId));
+  const members = memberships
+    .map((m) => ({ ...m, user: users.find((u) => u.id === m.userId) }))
     .filter((m) => m.user);
 
   return (

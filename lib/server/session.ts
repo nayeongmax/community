@@ -8,7 +8,7 @@
 
 import { cookies } from 'next/headers';
 import { User } from '../types';
-import { read } from './db';
+import { repo } from './repo';
 
 const COOKIE = 'community_session';
 
@@ -30,8 +30,7 @@ export async function clearSession(): Promise<void> {
 export async function currentUser(): Promise<User | null> {
   const id = (await cookies()).get(COOKIE)?.value;
   if (!id) return null;
-  const db = await read();
-  return db.users.find((u) => u.id === id) ?? null;
+  return repo.getUserById(id);
 }
 
 /** 이 커뮤니티에서 내 역할 */
@@ -40,8 +39,7 @@ export async function myRole(
 ): Promise<'owner' | 'admin' | 'member' | null> {
   const me = await currentUser();
   if (!me) return null;
-  const db = await read();
-  return db.memberships.find((m) => m.communityId === communityId && m.userId === me.id)?.role ?? null;
+  return (await repo.getMembership(communityId, me.id))?.role ?? null;
 }
 
 export function isManager(role: string | null): boolean {

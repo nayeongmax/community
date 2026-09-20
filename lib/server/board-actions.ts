@@ -6,7 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { colorFromString, uid } from '../utils';
 import type { AnonComment, AnonPost, BoardCategory } from '../board-types';
-import { anonKey, randomNickname, readBoard, writeBoard } from './board';
+import { anonKey, randomNickname } from './board';
+import { repo } from './repo';
 
 export interface BoardActionState {
   error?: string;
@@ -55,9 +56,7 @@ export async function createAnonPostAction(
     createdAt: new Date().toISOString(),
   };
 
-  const db = await readBoard();
-  db.posts.unshift(post);
-  await writeBoard(db);
+  await repo.createAnonPost(post);
 
   revalidatePath('/games');
   return { ok: true };
@@ -87,9 +86,7 @@ export async function createAnonCommentAction(
     createdAt: new Date().toISOString(),
   };
 
-  const db = await readBoard();
-  db.comments.push(comment);
-  await writeBoard(db);
+  await repo.createAnonComment(comment);
 
   revalidatePath('/games');
   return { ok: true };
@@ -97,24 +94,21 @@ export async function createAnonCommentAction(
 
 export async function toggleAnonLikeAction(postId: string): Promise<void> {
   const key = await ensureAnonKey();
-  const db = await readBoard();
-  const post = db.posts.find((p) => p.id === postId);
+  const post = await repo.getAnonPost(postId);
   if (!post) return;
 
-  const i = post.likedBy.indexOf(key);
-  if (i >= 0) post.likedBy.splice(i, 1);
-  else post.likedBy.push(key);
+  const likedBy = [...post.likedBy];
+  const i = likedBy.indexOf(key);
+  if (i >= 0) likedBy.splice(i, 1);
+  else likedBy.push(key);
 
-  await writeBoard(db);
+  await repo.updateAnonPost(postId, { likedBy });
   revalidatePath('/games');
 }
 
 export async function viewAnonPostAction(postId: string): Promise<void> {
-  const db = await readBoard();
-  const post = db.posts.find((p) => p.id === postId);
-  if (!post) return;
-  post.views += 1;
-  await writeBoard(db);
+  const post = await repo.getAnonPost(postId);
+  if (post) await repo.updateAnonPost(postId, { views: post.views + 1 });
 }
 
 /** 본인(같은 브라우저)이거나 비밀번호가 맞으면 삭제 */
@@ -123,17 +117,13 @@ export async function deleteAnonPostAction(
   password: string
 ): Promise<BoardActionState> {
   const key = await anonKey();
-  const db = await readBoard();
-  const post = db.posts.find((p) => p.id === postId);
+  const post = await repo.getAnonPost(postId);
   if (!post) return { error: '이미 삭제된 글입니다.' };
 
   if (post.authorKey !== key && post.password !== password) {
     return { error: '비밀번호가 올바르지 않습니다.' };
   }
-
-  db.posts = db.posts.filter((p) => p.id !== postId);
-  db.comments = db.comments.filter((c) => c.postId !== postId);
-  await writeBoard(db);
+  await repo.deleteAnonPost(postId);
 
   revalidatePath('/games');
   return { ok: true };
@@ -144,16 +134,13 @@ export async function deleteAnonCommentAction(
   password: string
 ): Promise<BoardActionState> {
   const key = await anonKey();
-  const db = await readBoard();
-  const comment = db.comments.find((c) => c.id === commentId);
+  const comment = await repo.getAnonComment(commentId);
   if (!comment) return { error: '이미 삭제된 댓글입니다.' };
 
   if (comment.authorKey !== key && comment.password !== password) {
     return { error: '비밀번호가 올바르지 않습니다.' };
   }
-
-  db.comments = db.comments.filter((c) => c.id !== commentId);
-  await writeBoard(db);
+  await repo.deleteAnonComment(commentId);
 
   revalidatePath('/games');
   return { ok: true };

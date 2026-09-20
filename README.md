@@ -93,14 +93,38 @@ npm run build && npm start
 
 ## 🗄 데이터 저장 방식
 
-검색로봇이 읽어야 하는 데이터(커뮤니티·게시판·글·댓글·회원)는 **서버** 에 둡니다.
+저장소는 **환경에 따라 자동으로 갈립니다.** 화면과 동작 코드는 어느 쪽인지 모릅니다.
+(`lib/server/repo/`)
 
-- 지금: `data/db.json` 파일 한 개 (`lib/server/db.ts`) — 설치 없이 바로 동작
-- 실제 서비스: `read()` / `write()` 두 함수만 Supabase 쿼리로 바꾸면 됩니다.
-  같은 모양의 테이블이 `supabase-schema.sql` 에 준비돼 있습니다.
+| 환경 | 데이터 | 업로드 파일 |
+| --- | --- | --- |
+| 로컬 개발 (기본) | `data/*.json` | `public/uploads/` |
+| **배포 (Supabase 설정 시)** | **Supabase Postgres** | **Supabase Storage** |
 
-게임 기록·익명 게시판·광고 배너처럼 검색과 무관하고 개인적인 데이터는
-브라우저(localStorage / IndexedDB)에 그대로 둡니다.
+`SUPABASE_URL` 과 `SUPABASE_SERVICE_ROLE_KEY` 가 있으면 Supabase 를, 없으면 파일을 씁니다.
+
+> ⚠️ **배포에는 Supabase 가 필요합니다.** Vercel·Netlify 같은 서버리스 환경은
+> 파일 시스템이 요청마다 초기화돼서, 파일 저장 방식으로 올리면 글을 써도
+> 새로고침하면 사라집니다.
+
+게임 기록·XP 는 개인적인 데이터라 브라우저(localStorage)에 그대로 둡니다.
+
+### Supabase 연결하기
+
+1. [supabase.com](https://supabase.com) 에서 프로젝트를 만듭니다 (무료 플랜으로 충분).
+2. **SQL Editor** 에 `supabase-schema.sql` 전체를 붙여넣고 실행합니다.
+   테이블과 `uploads` 버킷이 함께 만들어집니다.
+3. **Settings → API** 에서 두 값을 복사해 `.env` 에 넣습니다.
+
+```
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...        # service_role 키 (절대 공개하지 마세요)
+NEXT_PUBLIC_SITE_URL=https://내도메인
+```
+
+`service_role` 키는 서버에서만 쓰이고 브라우저로 나가지 않습니다
+(`NEXT_PUBLIC_` 접두사를 붙이지 않은 이유). 권한 검사는 `lib/server/actions.ts`
+에서 하고, RLS 는 브라우저의 직접 접근을 막는 용도로 켜 둡니다.
 
 ## 🔧 환경 변수
 
@@ -128,8 +152,9 @@ lib/
 components/               # 화면 조각 (client)
 games/                    # 미니게임 12종
 lib/
+├─ server/repo/           # 저장소 — file.ts(로컬) · supabase.ts(배포)
 ├─ server/actions.ts      # 쓰기 동작 (Server Actions) · 권한 검사
-├─ server/uploads.ts      # 파일 저장 (S3 교체 지점)
+├─ server/uploads.ts      # 파일 저장 (로컬 폴더 ↔ Supabase Storage)
 ├─ server/board.ts        # 익명 게시판
 └─ server/ads.ts          # 광고 배너
 ```

@@ -1,38 +1,21 @@
-// 광고 배너 (서버 저장)
+// 광고 배너
 //
-// 방문자 모두에게 같은 배너가 보여야 하므로 서버에 둔다.
-// 이미지는 uploads.ts 를 통해 public/uploads 에 저장된다.
+// 방문자 모두에게 같은 배너가 보여야 하므로 서버에 저장한다.
+// 실제 저장은 lib/server/repo 가 맡는다 (파일 또는 Supabase).
 
-import { promises as fs } from 'fs';
-import path from 'path';
 import { uid } from '../utils';
-
 import type { AdBanner } from './ads-types';
+import { repo } from './repo';
+
 export type { AdBanner } from './ads-types';
 export { BANNER_RATIO } from './ads-types';
 
-const FILE = path.join(process.cwd(), 'data', 'ads.json');
-
-let cache: AdBanner[] | null = null;
-
 export async function readAds(): Promise<AdBanner[]> {
-  if (cache) return cache;
-  try {
-    cache = JSON.parse(await fs.readFile(FILE, 'utf8')) as AdBanner[];
-  } catch {
-    cache = [];
-  }
-  return cache;
-}
-
-export async function writeAds(list: AdBanner[]): Promise<void> {
-  cache = list;
-  await fs.mkdir(path.dirname(FILE), { recursive: true });
-  await fs.writeFile(FILE, JSON.stringify(list, null, 2), 'utf8');
+  return repo.listAds();
 }
 
 export async function listActiveAds(): Promise<AdBanner[]> {
-  return (await readAds()).filter((b) => b.active);
+  return (await repo.listAds()).filter((b) => b.active);
 }
 
 export function newBanner(input: { title: string; image: string; link?: string }): AdBanner {
