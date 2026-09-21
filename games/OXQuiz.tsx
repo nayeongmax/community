@@ -94,17 +94,17 @@ export default function OXQuiz({ onFinish }: GameProps) {
 
   if (phase === 'ready' || questions.length === 0) {
     return (
-      <div className="w-[320px] py-10 text-center">
-        <p className="text-5xl mb-3">🎲</p>
-        <p className="font-black text-slate-800 text-lg">카지노 OX 퀴즈</p>
-        <p className="text-sm text-slate-500 mt-1 mb-5">
+      <div className="w-[440px] py-12 text-center">
+        <p className="text-6xl mb-4">🎲</p>
+        <p className="font-black text-slate-900 text-2xl">카지노 OX 퀴즈</p>
+        <p className="text-base text-slate-600 mt-2 mb-6 leading-relaxed">
           카지노 룰 · 확률 · 상식 {ROUNDS}문제
           <br />
           3연속 정답부터 콤보 보너스 +{COMBO_BONUS}점
         </p>
         <button
           onClick={start}
-          className="bg-emerald-600 text-white font-bold px-7 py-3 rounded-xl hover:bg-emerald-700"
+          className="bg-emerald-600 text-white text-lg font-bold px-9 py-3.5 rounded-xl hover:bg-emerald-700"
         >
           시작하기
         </button>
@@ -114,15 +114,15 @@ export default function OXQuiz({ onFinish }: GameProps) {
 
   if (phase === 'over') {
     return (
-      <div className="w-[320px] py-10 text-center">
-        <p className="text-5xl mb-3">{correct >= 8 ? '🃏' : correct >= 5 ? '👍' : '📖'}</p>
-        <p className="text-2xl font-black text-slate-800">{score}점</p>
-        <p className="text-sm text-slate-500 mt-1 mb-5">
+      <div className="w-[440px] py-12 text-center">
+        <p className="text-6xl mb-4">{correct >= 8 ? '🃏' : correct >= 5 ? '👍' : '📖'}</p>
+        <p className="text-4xl font-black text-slate-900">{score}점</p>
+        <p className="text-base text-slate-600 mt-2 mb-6">
           {ROUNDS}문제 중 <span className="font-bold text-emerald-600">{correct}문제</span> 정답
         </p>
         <button
           onClick={start}
-          className="bg-emerald-600 text-white font-bold px-7 py-3 rounded-xl hover:bg-emerald-700"
+          className="bg-emerald-600 text-white text-lg font-bold px-9 py-3.5 rounded-xl hover:bg-emerald-700"
         >
           다시하기
         </button>
@@ -135,18 +135,18 @@ export default function OXQuiz({ onFinish }: GameProps) {
   const isCorrect = picked === q.answer;
 
   return (
-    <div className="w-[320px]">
-      <div className="flex items-center justify-between text-sm font-bold text-slate-600 mb-1.5">
+    <div className="w-[440px]">
+      <div className="flex items-center justify-between text-base font-bold text-slate-700 mb-2">
         <span>
           {idx + 1} / {ROUNDS}
         </span>
         <span className="flex items-center gap-2">
           {combo >= 3 && <span className="text-amber-500">🔥 {combo}연속</span>}
-          <span className="text-emerald-600">{score}점</span>
+          <span className="text-emerald-600 text-xl">{score}점</span>
         </span>
       </div>
 
-      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden mb-3">
+      <div className="h-2 rounded-full bg-slate-100 overflow-hidden mb-4">
         <div
           className="h-full bg-emerald-500 transition-all duration-300"
           style={{ width: `${((idx + (revealed ? 1 : 0)) / ROUNDS) * 100}%` }}
@@ -154,17 +154,17 @@ export default function OXQuiz({ onFinish }: GameProps) {
       </div>
 
       <span
-        className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full mb-2 ${TOPIC_STYLE[q.topic]}`}
+        className={`inline-block text-sm font-bold px-3 py-1 rounded-full mb-3 ${TOPIC_STYLE[q.topic]}`}
       >
         {q.topic}
       </span>
 
-      <p className="font-bold text-slate-800 leading-relaxed min-h-[72px]">{q.q}</p>
+      <p className="text-xl font-bold text-slate-900 leading-relaxed min-h-[96px]">{q.q}</p>
 
       <div className="grid grid-cols-2 gap-3 mt-1">
         {([true, false] as const).map((v) => {
           const label = v ? 'O' : 'X';
-          const base = 'h-24 rounded-2xl text-4xl font-black border-2 transition-colors';
+          const base = 'h-32 rounded-2xl text-6xl font-black border-2 transition-colors';
           let style: string;
           if (!revealed) {
             style = v
@@ -187,20 +187,20 @@ export default function OXQuiz({ onFinish }: GameProps) {
 
       {revealed && (
         <div
-          className={`mt-3 rounded-xl p-3 border ${
+          className={`mt-4 rounded-xl p-4 border ${
             isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'
           }`}
         >
-          <p className={`text-sm font-black ${isCorrect ? 'text-emerald-700' : 'text-rose-600'}`}>
+          <p className={`text-lg font-black ${isCorrect ? 'text-emerald-700' : 'text-rose-600'}`}>
             {isCorrect ? '정답!' : '오답'} · 답은 {q.answer ? 'O' : 'X'}
             {isCorrect && comboRef.current >= 3 && (
               <span className="ml-1 text-amber-500">콤보 +{COMBO_BONUS}점</span>
             )}
           </p>
-          <p className="text-xs text-slate-600 mt-1 leading-relaxed">{q.note}</p>
+          <p className="text-base text-slate-700 mt-1.5 leading-relaxed">{q.note}</p>
           <button
             onClick={next}
-            className="mt-2.5 w-full bg-slate-800 text-white font-bold text-sm py-2 rounded-lg hover:bg-slate-700"
+            className="mt-3 w-full bg-slate-800 text-white font-bold text-base py-2.5 rounded-lg hover:bg-slate-700"
           >
             {idx + 1 >= ROUNDS ? '결과 보기' : '다음 문제 →'}
           </button>

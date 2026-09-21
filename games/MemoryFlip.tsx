@@ -87,19 +87,19 @@ export default function MemoryFlip({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-[320px] text-sm font-bold text-slate-600">
+      <div className="flex items-center justify-between w-[440px] text-base font-bold text-slate-700">
         <span>🔁 {moves}번</span>
         <span>⏱ {elapsed}초</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 w-[320px]">
+      <div className="grid grid-cols-4 gap-3 w-[440px]">
         {cards.map((c, i) => {
           const face = c.matched || open.includes(i);
           return (
             <button
               key={c.id}
               onClick={() => flip(i)}
-              className={`h-[74px] rounded-xl text-3xl grid place-items-center transition-all ${
+              className={`h-[100px] rounded-xl text-5xl grid place-items-center transition-all ${
                 face
                   ? c.matched
                     ? 'bg-emerald-100 ring-2 ring-emerald-300'
@@ -124,7 +124,7 @@ export default function MemoryFlip({ onFinish }: GameProps) {
           </button>
         </div>
       ) : (
-        <button onClick={restart} className="text-xs text-slate-400 hover:text-slate-600 underline">
+        <button onClick={restart} className="text-sm text-slate-500 hover:text-slate-700 underline">
           카드 다시 섞기
         </button>
       )}

@@ -5,15 +5,15 @@ import { GameProps } from './types';
 
 /** 🐤 파이프 통과 — 클릭(또는 스페이스)으로 날갯짓해서 파이프 사이를 지나간다. */
 
-const W = 320;
-const H = 400;
-const BIRD_X = 78;
-const BIRD_R = 11;
-const GRAVITY = 0.42;
-const FLAP = -6.6;
-const PIPE_W = 48;
-const PIPE_GAP = 120;
-const PIPE_SPEED = 2.1;
+const W = 440;
+const H = 550;
+const BIRD_X = 107;
+const BIRD_R = 15;
+const GRAVITY = 0.58;
+const FLAP = -9.1;
+const PIPE_W = 66;
+const PIPE_GAP = 165;
+const PIPE_SPEED = 2.9;
 /** 파이프 생성 간격(프레임) */
 const PIPE_EVERY = 95;
 
@@ -137,7 +137,7 @@ export default function Flappy({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-sm font-bold text-slate-600">
+      <p className="text-lg font-bold text-slate-700">
         통과 <span className="text-sky-600 text-lg">{score}</span>개
       </p>
 
@@ -153,7 +153,7 @@ export default function Flappy({ onFinish }: GameProps) {
               {phase === 'over' && (
                 <p className="text-2xl font-black text-slate-800 mb-1">🐤 {score}개 통과</p>
               )}
-              <p className="text-xs text-slate-500 mb-3">화면을 클릭하거나 스페이스로 날갯짓</p>
+              <p className="text-base text-slate-500 mb-4">화면을 클릭하거나 스페이스로 날갯짓</p>
               <span className="inline-block bg-sky-500 text-white font-bold px-6 py-2.5 rounded-xl">
                 {phase === 'over' ? '다시하기' : '시작하기'}
               </span>

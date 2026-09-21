@@ -90,17 +90,17 @@ export default function TriviaQuiz({ onFinish }: GameProps) {
 
   if (phase === 'ready' || questions.length === 0) {
     return (
-      <div className="w-[320px] py-10 text-center">
-        <p className="text-5xl mb-3">🧠</p>
-        <p className="font-black text-slate-800 text-lg">일반상식 퀴즈</p>
-        <p className="text-sm text-slate-500 mt-1 mb-5">
+      <div className="w-[440px] py-12 text-center">
+        <p className="text-6xl mb-4">🧠</p>
+        <p className="font-black text-slate-900 text-2xl">일반상식 퀴즈</p>
+        <p className="text-base text-slate-600 mt-2 mb-6 leading-relaxed">
           4지선다 {ROUNDS}문제 · 문제당 {LIMIT}초
           <br />
           빨리 맞힐수록 점수가 올라갑니다
         </p>
         <button
           onClick={start}
-          className="bg-indigo-600 text-white font-bold px-7 py-3 rounded-xl hover:bg-indigo-700"
+          className="bg-indigo-600 text-white text-lg font-bold px-9 py-3.5 rounded-xl hover:bg-indigo-700"
         >
           시작하기
         </button>
@@ -110,15 +110,15 @@ export default function TriviaQuiz({ onFinish }: GameProps) {
 
   if (phase === 'over') {
     return (
-      <div className="w-[320px] py-10 text-center">
-        <p className="text-5xl mb-3">{correct >= 8 ? '🏆' : correct >= 5 ? '👍' : '📚'}</p>
-        <p className="text-2xl font-black text-slate-800">{score}점</p>
-        <p className="text-sm text-slate-500 mt-1 mb-5">
+      <div className="w-[440px] py-12 text-center">
+        <p className="text-6xl mb-4">{correct >= 8 ? '🏆' : correct >= 5 ? '👍' : '📚'}</p>
+        <p className="text-4xl font-black text-slate-900">{score}점</p>
+        <p className="text-base text-slate-600 mt-2 mb-6">
           {ROUNDS}문제 중 <span className="font-bold text-indigo-600">{correct}문제</span> 정답
         </p>
         <button
           onClick={start}
-          className="bg-indigo-600 text-white font-bold px-7 py-3 rounded-xl hover:bg-indigo-700"
+          className="bg-indigo-600 text-white text-lg font-bold px-9 py-3.5 rounded-xl hover:bg-indigo-700"
         >
           다시하기
         </button>
@@ -130,21 +130,21 @@ export default function TriviaQuiz({ onFinish }: GameProps) {
   const revealed = picked !== null;
 
   return (
-    <div className="w-[320px]">
-      <div className="flex items-center justify-between text-sm font-bold text-slate-600 mb-1.5">
+    <div className="w-[440px]">
+      <div className="flex items-center justify-between text-base font-bold text-slate-700 mb-2">
         <span>
           {idx + 1} / {ROUNDS}
         </span>
-        <span className="text-indigo-600">{score}점</span>
+        <span className="text-indigo-600 text-xl">{score}점</span>
       </div>
 
-      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden mb-1">
+      <div className="h-2 rounded-full bg-slate-100 overflow-hidden mb-1.5">
         <div
           className="h-full bg-indigo-500 transition-all duration-300"
           style={{ width: `${((idx + (revealed ? 1 : 0)) / ROUNDS) * 100}%` }}
         />
       </div>
-      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden mb-3">
+      <div className="h-2 rounded-full bg-slate-100 overflow-hidden mb-4">
         <div
           className={`h-full transition-all duration-1000 ease-linear ${
             timeLeft <= 5 ? 'bg-rose-500' : 'bg-emerald-400'
@@ -153,9 +153,9 @@ export default function TriviaQuiz({ onFinish }: GameProps) {
         />
       </div>
 
-      <p className="font-bold text-slate-800 leading-relaxed min-h-[56px] mb-3">{q.q}</p>
+      <p className="text-xl font-bold text-slate-900 leading-relaxed min-h-[84px] mb-4">{q.q}</p>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {q.choices.map((c, i) => {
           const isAnswer = i === q.answer;
           const isPicked = i === picked;
@@ -171,9 +171,9 @@ export default function TriviaQuiz({ onFinish }: GameProps) {
               key={i}
               onClick={() => answer(i)}
               disabled={revealed}
-              className={`w-full text-left border rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${style}`}
+              className={`w-full text-left border rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${style}`}
             >
-              <span className="text-slate-400 mr-2">{['①', '②', '③', '④'][i]}</span>
+              <span className="text-slate-400 mr-2.5">{['①', '②', '③', '④'][i]}</span>
               {c}
               {revealed && isAnswer && <span className="float-right">✓</span>}
               {revealed && isPicked && !isAnswer && <span className="float-right">✕</span>}
@@ -182,7 +182,7 @@ export default function TriviaQuiz({ onFinish }: GameProps) {
         })}
       </div>
 
-      <p className="h-6 mt-2 text-center text-sm font-bold">
+      <p className="h-7 mt-3 text-center text-base font-bold">
         {revealed &&
           (picked === q.answer ? (
             <span className="text-emerald-600">정답! +{BASE + timeLeft}점</span>

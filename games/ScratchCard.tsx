@@ -5,8 +5,8 @@ import { GameProps } from './types';
 
 /** 🎟 긁는 복권 — 은박을 마우스로 긁어서 당첨금을 확인한다. */
 
-const W = 280;
-const H = 160;
+const W = 400;
+const H = 230;
 /** 이만큼 긁으면 자동으로 전체 공개 */
 const REVEAL_RATIO = 0.45;
 /** [당첨 점수, 가중치] */
@@ -121,7 +121,7 @@ export default function ScratchCard({ onFinish }: GameProps) {
         style={{ width: W, height: H }}
       >
         <div className="text-center pointer-events-none">
-          <p className="text-xs font-bold text-amber-700 tracking-widest">LUCKY TICKET</p>
+          <p className="text-sm font-bold text-amber-700 tracking-widest">LUCKY TICKET</p>
           <p className={`text-4xl font-black ${prize > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
             {prize > 0 ? `+${prize}점` : '꽝'}
           </p>
@@ -153,7 +153,7 @@ export default function ScratchCard({ onFinish }: GameProps) {
           새 복권 긁기
         </button>
       ) : (
-        <p className="text-xs text-slate-400">절반쯤 긁으면 자동으로 공개됩니다</p>
+        <p className="text-sm text-slate-500">절반쯤 긁으면 자동으로 공개됩니다</p>
       )}
     </div>
   );

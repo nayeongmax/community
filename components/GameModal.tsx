@@ -46,47 +46,47 @@ export default function GameModal({ game, onClose, onRecorded, onBrag }: Props) 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="rounded-2xl w-full max-w-md my-auto shadow-2xl border border-white/10 bg-[#141834] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
-          <span className="text-xl">{game.emoji}</span>
-          <h2 className="font-black text-white">{game.title}</h2>
+      <div className="rounded-2xl w-full max-w-2xl my-auto shadow-2xl border border-white/10 bg-[#141834] overflow-hidden">
+        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/10">
+          <span className="text-2xl">{game.emoji}</span>
+          <h2 className="text-lg font-black text-white">{game.title}</h2>
           <button
             onClick={onClose}
-            className="ml-auto w-8 h-8 rounded-full hover:bg-white/10 text-slate-400 text-lg"
+            className="ml-auto w-9 h-9 rounded-full hover:bg-white/10 text-slate-300 text-xl"
             aria-label="닫기"
           >
             ✕
           </button>
         </div>
 
-        <p className="px-4 py-2 text-xs text-slate-400 bg-white/[0.04]">{game.howTo}</p>
+        <p className="px-5 py-2.5 text-sm text-slate-300 bg-white/[0.04]">{game.howTo}</p>
 
-        <div className="p-3">
-          <div className="rounded-2xl bg-white p-4 flex justify-center">
+        <div className="p-4">
+          <div className="rounded-2xl bg-white p-5 flex justify-center">
             <Game onFinish={handleFinish} />
           </div>
         </div>
 
         {result && (
-          <div className="mx-3 mb-3 rounded-xl bg-amber-300/10 border border-amber-300/30 p-3">
+          <div className="mx-4 mb-4 rounded-xl bg-amber-300/10 border border-amber-300/30 p-4">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-black text-white">{result.score}점</span>
-              <span className="text-sm font-bold text-amber-300">+{result.xpGained} XP</span>
+              <span className="text-xl font-black text-white">{result.score}점</span>
+              <span className="text-base font-bold text-amber-300">+{result.xpGained} XP</span>
               {result.isNewBest && (
-                <span className="text-[11px] font-black bg-rose-500 text-white px-2 py-0.5 rounded-full">
+                <span className="text-xs font-black bg-rose-500 text-white px-2.5 py-1 rounded-full">
                   🎉 신기록!
                 </span>
               )}
               {result.levelUp && (
-                <span className="text-[11px] font-black bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-black bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full">
                   ⬆ Lv.{result.level} 달성
                 </span>
               )}
-              <span className="text-xs text-slate-400 ml-auto">최고 {result.best}점</span>
+              <span className="text-sm text-slate-300 ml-auto">최고 {result.best}점</span>
             </div>
             <button
               onClick={() => onBrag(game, result.score)}
-              className="mt-2.5 w-full text-sm font-bold bg-amber-300 text-slate-900 rounded-lg py-2 hover:bg-amber-200"
+              className="mt-3 w-full text-base font-bold bg-amber-300 text-slate-900 rounded-lg py-2.5 hover:bg-amber-200"
             >
               📢 게시판에 점수 자랑하기
             </button>

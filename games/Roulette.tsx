@@ -49,7 +49,7 @@ export default function Roulette({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative w-[300px] h-[300px] grid place-items-center">
+      <div className="relative w-[420px] h-[420px] grid place-items-center">
         {/* 포인터 */}
         <div
           className="absolute -top-1 z-20 w-0 h-0"
@@ -60,7 +60,7 @@ export default function Roulette({ onFinish }: GameProps) {
           }}
         />
         <div
-          className="w-[280px] h-[280px] rounded-full border-[6px] border-amber-400 shadow-xl relative"
+          className="w-[392px] h-[392px] rounded-full border-[8px] border-amber-400 shadow-xl relative"
           style={{
             background: WHEEL_BG,
             transform: `rotate(${rotation}deg)`,

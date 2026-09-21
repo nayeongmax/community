@@ -2,7 +2,13 @@ import type { Config } from 'tailwindcss';
 
 /* 디자인 토큰 — 잉크(남색) 한 가지를 중심으로, 금색은 포인트로만 */
 export default {
-  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './lib/**/*.{ts,tsx}'],
+  content: [
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './lib/**/*.{ts,tsx}',
+    // 게임 화면도 여기서 만들어진다 — 빠져 있으면 게임의 모든 스타일이 사라진다
+    './games/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
       colors: {
