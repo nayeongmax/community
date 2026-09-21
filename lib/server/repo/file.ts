@@ -26,6 +26,31 @@ let mainCache: DB | null = null;
 let boardCache: BoardFile | null = null;
 let adsCache: (AdBanner & { order: number })[] | null = null;
 
+/**
+ * 파일에 쓴다. 못 쓰면 조용히 넘어간다.
+ *
+ * 서버리스에 잘못 올라갔을 때 디스크가 읽기 전용이라 쓰기가 실패하는데,
+ * 그때 화면까지 죽어 버리면 원인을 알기 어렵다. 메모리 캐시는 그대로
+ * 살아 있으므로 화면은 보이게 두고, 대신 한 번만 경고를 남긴다.
+ * (배포에서는 Supabase 를 써야 한다 — index.ts 의 안내 참고)
+ */
+let warnedReadOnly = false;
+async function writeFile(file: string, value: unknown): Promise<void> {
+  try {
+    await fs.mkdir(DIR, { recursive: true });
+    await fs.writeFile(file, JSON.stringify(value, null, 2), 'utf8');
+  } catch (err) {
+    if (!warnedReadOnly) {
+      warnedReadOnly = true;
+      console.warn(
+        `[저장소] ${DIR} 에 쓸 수 없어 이번 실행 동안만 메모리에 담아 둡니다. ` +
+          '배포 환경이라면 SUPABASE_URL / SUPABASE_SECRET_KEY 를 설정하세요.',
+        err
+      );
+    }
+  }
+}
+
 async function readMain(): Promise<DB> {
   if (mainCache) return mainCache;
   try {
@@ -38,8 +63,7 @@ async function readMain(): Promise<DB> {
 }
 
 async function saveMain(): Promise<void> {
-  await fs.mkdir(DIR, { recursive: true });
-  await fs.writeFile(MAIN, JSON.stringify(mainCache, null, 2), 'utf8');
+  await writeFile(MAIN, mainCache);
 }
 
 async function readBoardFile(): Promise<BoardFile> {
@@ -54,8 +78,7 @@ async function readBoardFile(): Promise<BoardFile> {
 }
 
 async function saveBoard(): Promise<void> {
-  await fs.mkdir(DIR, { recursive: true });
-  await fs.writeFile(BOARD, JSON.stringify(boardCache, null, 2), 'utf8');
+  await writeFile(BOARD, boardCache);
 }
 
 async function readAdsFile(): Promise<(AdBanner & { order: number })[]> {
@@ -69,8 +92,7 @@ async function readAdsFile(): Promise<(AdBanner & { order: number })[]> {
 }
 
 async function saveAds(): Promise<void> {
-  await fs.mkdir(DIR, { recursive: true });
-  await fs.writeFile(ADS, JSON.stringify(adsCache, null, 2), 'utf8');
+  await writeFile(ADS, adsCache);
 }
 
 const byIds = <T extends { id: string }>(rows: T[], ids: string[]) =>
