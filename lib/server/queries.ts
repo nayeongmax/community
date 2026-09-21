@@ -113,3 +113,118 @@ export async function listAllPosts(limit?: number): Promise<PostDetail[]> {
 export async function listBoards(communityId: string) {
   return repo.listBoards(communityId);
 }
+
+/* ------------------------------------------------------------------
+ * 홈 화면용 집계
+ * ---------------------------------------------------------------- */
+
+export interface SiteStats {
+  communities: number;
+  posts: number;
+  todayPosts: number;
+  todayComments: number;
+}
+
+export interface TrendingCommunity extends CommunityDetail {
+  /** 오늘 올라온 글 수 */
+  recentPosts: number;
+  /** 오늘 달린 댓글 수 */
+  recentComments: number;
+}
+
+export interface HomeData {
+  posts: PostDetail[];
+  communities: CommunityDetail[];
+  trending: TrendingCommunity[];
+  tags: string[];
+  stats: SiteStats;
+}
+
+/** 오늘 0시 (ISO) */
+function startOfToday(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+/**
+ * 홈에 필요한 것을 한 번에 모은다.
+ * 글·커뮤니티를 각각 한 번씩만 읽고, 나머지 수치는 그 위에서 계산한다.
+ */
+export async function getHomeData(): Promise<HomeData> {
+  const since = startOfToday();
+  const [posts, communities, todayComments] = await Promise.all([
+    listAllPosts(),
+    listCommunities(),
+    repo.listCommentsSince(since),
+  ]);
+
+  // 글 → 커뮤니티 (댓글이 어느 커뮤니티에 달렸는지 알아내는 데 쓴다)
+  const communityOfPost = new Map(posts.map((p) => [p.id, p.communityId]));
+
+  const recentPosts = new Map<string, number>();
+  for (const p of posts) {
+    if (p.createdAt >= since) recentPosts.set(p.communityId, (recentPosts.get(p.communityId) ?? 0) + 1);
+  }
+  const recentComments = new Map<string, number>();
+  for (const c of todayComments) {
+    const id = communityOfPost.get(c.postId);
+    if (id) recentComments.set(id, (recentComments.get(id) ?? 0) + 1);
+  }
+
+  const trending = communities
+    .map((c) => ({
+      ...c,
+      recentPosts: recentPosts.get(c.id) ?? 0,
+      recentComments: recentComments.get(c.id) ?? 0,
+    }))
+    .sort(
+      (a, b) =>
+        b.recentPosts * 2 + b.recentComments - (a.recentPosts * 2 + a.recentComments) ||
+        b.members - a.members
+    )
+    .slice(0, 8);
+
+  // 많이 쓰인 태그
+  const tagCount = new Map<string, number>();
+  for (const p of posts) for (const t of p.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+  const tags = [...tagCount.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([t]) => t);
+
+  return {
+    posts,
+    communities: [...communities].sort((a, b) => b.members - a.members),
+    trending,
+    tags,
+    stats: {
+      communities: communities.length,
+      posts: posts.length,
+      todayPosts: posts.filter((p) => p.createdAt >= since).length,
+      todayComments: todayComments.length,
+    },
+  };
+}
+
+export type FeedSort = 'hot' | 'new' | 'comments' | 'top';
+
+/** 정렬 기준에 맞춰 글을 줄 세운다 */
+export function sortFeed(posts: PostDetail[], sort: FeedSort): PostDetail[] {
+  const list = [...posts];
+  const score = (p: PostDetail) => {
+    // 오래될수록 점수가 내려가는 단순한 인기 점수
+    const hours = (Date.now() - +new Date(p.createdAt)) / 3_600_000;
+    return (p.likedBy.length * 3 + p.commentCount * 2 + p.views / 50) / Math.pow(hours + 2, 0.6);
+  };
+  switch (sort) {
+    case 'new':
+      return list.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    case 'comments':
+      return list.sort((a, b) => b.commentCount - a.commentCount);
+    case 'top':
+      return list.sort((a, b) => b.likedBy.length - a.likedBy.length);
+    default:
+      return list.sort((a, b) => score(b) - score(a));
+  }
+}

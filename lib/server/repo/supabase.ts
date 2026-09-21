@@ -402,6 +402,14 @@ export const supabaseRepo: Repo = {
       .order('created_at');
     return (data ?? []).map(toComment);
   },
+  async listCommentsSince(since) {
+    const { data } = await supabase()
+      .from('comments')
+      .select('*')
+      .gte('created_at', since)
+      .order('created_at');
+    return (data ?? []).map(toComment);
+  },
   async countComments(postIds) {
     return countBy('comments', 'post_id', postIds);
   },

@@ -3,6 +3,7 @@ import { site } from '../../lib/site';
 import { currentUser } from '../../lib/server/session';
 import { logoutAction } from '../../lib/server/actions';
 import { userEmoji } from '../../lib/emoji';
+import SideNav from '../../components/SideNav';
 
 
 /** 커뮤니티 화면 공통 껍데기 (게임 랜드는 자체 헤더를 써서 이 밖에 있다) */
@@ -57,7 +58,14 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           </div>
         </header>
 
-        <div className="flex-1 w-full max-w-6xl mx-auto px-4 py-6">{children}</div>
+        <div className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 flex gap-6">
+          <aside className="hidden lg:block w-[184px] shrink-0">
+            <div className="sticky top-[72px]">
+              <SideNav />
+            </div>
+          </aside>
+          <main className="min-w-0 flex-1">{children}</main>
+        </div>
 
         <footer className="border-t border-hair bg-white py-7 text-center text-xs text-ink-faint">
           <p>누구나 만드는 오픈 커뮤니티 플랫폼</p>
