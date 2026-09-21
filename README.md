@@ -1,107 +1,173 @@
 # 커뮤니티 플랫폼 (Community)
 
 누구나 커뮤니티를 개설하고, 게시판을 열고, 자유롭게 글을 쓰고 소통할 수 있는
-**오픈 커뮤니티 플랫폼**입니다. (네이버 카페 + 디시인사이드 / 뽐뿌 / 보배드림 스타일)
+**오픈 커뮤니티 플랫폼**입니다.
+
+**Next.js 서버 렌더링**으로 동작합니다. 글 하나하나가 고유 주소를 갖고,
+검색로봇이 요청하면 자바스크립트 없이도 본문이 담긴 HTML 이 나갑니다.
 
 ## ✨ 주요 기능
 
-- **회원가입 / 로그인** — 이메일 + 닉네임
-- **커뮤니티 개설** — 누구나 이름·카테고리·소개를 정해 커뮤니티를 만들 수 있음
-- **커뮤니티 탐색** — 카테고리 필터 · 검색 · 인기순/활발한/최신 정렬
-- **게시판** — 커뮤니티마다 공지사항·자유게시판 기본 생성, 운영자가 게시판 추가/삭제
-- **가입 / 탈퇴** — 멤버 등급(운영자 / 관리자 / 멤버)
-- **글쓰기 · 글목록 · 글상세** — 조회수 카운트, 게시판별 목록
-- **댓글** — 작성 / 삭제 / 좋아요
-- **추천 / 비추천** — 디시 스타일 개추/비추
-- **마이페이지** — 내가 가입/개설한 커뮤니티 목록
-- **커뮤니티 관리** — 운영자용 게시판·멤버 관리
-- **🎮 게임 센터 + 익명 자유게시판** (`/games`) — 아래 참고
+| 기능 | 어디에 저장되나 |
+| --- | --- |
+| 커뮤니티 개설·가입, 게시판, 글·댓글·추천 | 서버 |
+| 사진·동영상·링크 첨부 | 서버 (`public/uploads`) |
+| 커뮤니티 꾸미기 (대표 이미지·타이틀 이미지) | 서버 |
+| 익명 자유게시판 | 서버 (익명 신원은 쿠키) |
+| 광고 배너 | 서버 |
+| 미니게임 12종 기록·XP·마이 랜드 | 브라우저 (개인 기록) |
 
-## 🎮 게임 센터 · 익명 자유게시판 (`/games`)
+## 🔎 검색 노출 — 무엇이 달라졌나
 
-한 페이지 위쪽에는 **바로 즐기는 미니게임 12종**, 아래쪽에는 **익명 자유게시판**이 있습니다.
-로그인 없이 클릭만으로 플레이할 수 있고, 점수는 XP 로 쌓여 레벨이 올라갑니다.
+예전에는 브라우저가 화면을 그리는 SPA 였습니다. 검색로봇이 글 주소를 요청하면
+**빈 껍데기 HTML** 만 받아갔고, 특히 자바스크립트를 거의 실행하지 않는
+네이버 `Yeti` 는 글을 전혀 읽을 수 없었습니다.
 
-| 게임 | 조작 | 게임 | 조작 |
-| --- | --- | --- | --- |
-| 🎯 다트 던지기 | 클릭 (바람 보정) | 🐍 스네이크 | 방향키·WASD·화면 버튼 |
-| 🎡 행운 룰렛 | 클릭 | 🧱 브레이크아웃 | 마우스 |
-| 🎰 슬롯머신 | 클릭 | 🎈 풍선 터뜨리기 | 클릭 (30초) |
-| 🎟 긁는 복권 | 드래그로 긁기 | ⚡ 반응속도 | 클릭 (5라운드) |
-| 🐤 파이프 통과 | 클릭·스페이스 | 🃏 짝 맞추기 | 클릭 |
-| 🧠 일반상식 퀴즈 | 4지선다 (문제당 15초) | ⭕ OX 퀴즈 | O/X 클릭 (카지노 룰·게임 상식) |
+지금은 글 주소를 요청하면 **서버가 완성된 HTML** 을 돌려줍니다.
 
-- 점수 → XP 환산과 최고기록은 게임마다 저장되고, 300 XP 마다 레벨이 1 오릅니다.
-- 퀴즈 문항은 `src/games/quizData.ts` 한 곳에 모여 있어 문제 추가/수정이 쉽습니다.
-  상식 퀴즈는 빨리 맞힐수록, OX 퀴즈는 3연속 정답부터 보너스 점수가 붙습니다.
-- 한 판이 끝나면 **게시판에 점수 자랑하기** 버튼으로 결과가 담긴 글을 바로 쓸 수 있습니다.
-- 게시판은 **완전 익명**입니다. 글마다 랜덤 닉네임(예: "지나가던 감자")이 붙고,
-  카테고리(자유·유머·질문·게임·고민·정보) · 정렬(최신/인기/댓글순) · 검색 · 댓글 · 추천을 지원합니다.
-- 삭제는 글 작성 시 정한 **숫자 4자리 비밀번호**로 합니다. (같은 브라우저에서 쓴 글은 비번 없이 삭제)
-
-### 게임 추가하기
-
-`src/games/` 에 `GameProps` 를 받는 컴포넌트를 만들고 `src/games/index.ts` 의 `GAMES` 배열에
-`GameDef` 하나만 추가하면 카드·모달·기록·XP 가 자동으로 연결됩니다.
-
-```tsx
-// 한 판이 끝나면 점수를 딱 한 번 보고하면 된다
-export default function MyGame({ onFinish }: GameProps) { /* ... */ }
+```bash
+curl -A "Yeti" http://localhost:3000/c/tigers/post/<글번호>
 ```
+
+이 응답 안에 이미 들어 있는 것:
+
+- `<title>` = 글 제목, `description` = 본문 앞 155자
+- 글 본문 전체와 댓글 본문
+- `canonical` (중복 색인 방지), 오픈그래프/트위터 카드
+- `keywords` = 커뮤니티 이름 · 게시판 · 글에 단 태그
+- JSON-LD 구조화 데이터
+  - `DiscussionForumPosting` — 본문 · 작성자 · 작성일 · 댓글 · 추천수
+  - `BreadcrumbList` — 홈 › 커뮤니티 › 글
+
+관련 코드: `app/c/[slug]/post/[id]/page.tsx` 의 `generateMetadata()` 와 본문 렌더링.
+
+**글을 새로 쓰면 그 즉시** 위 HTML 이 만들어지고 `sitemap.xml` · `rss.xml` 에도 함께 올라갑니다.
+(사이트맵은 `force-dynamic` 이라 빌드 시점에 고정되지 않습니다)
+
+### 검색엔진에 제출할 것
+
+| 주소 | 내용 |
+| --- | --- |
+| `/sitemap.xml` | 커뮤니티·글 전체 주소 (글이 늘면 자동 반영) |
+| `/rss.xml` | 최근 글 50개 |
+| `/robots.txt` | 네이버 `Yeti` 허용 명시 |
+
+### 네이버 등록 순서
+
+1. 도메인에 배포하고 `.env` 에 `NEXT_PUBLIC_SITE_URL` 을 넣습니다.
+2. [네이버 서치어드바이저](https://searchadvisor.naver.com) 에 사이트 등록
+3. 소유확인 코드를 `.env` 의 `NEXT_PUBLIC_NAVER_VERIFY` 에 넣고 재배포
+4. **요청 → 사이트맵 제출** 에 `https://도메인/sitemap.xml`
+5. **요청 → RSS 제출** 에 `https://도메인/rss.xml`
+6. 급한 글은 **요청 → 웹페이지 수집** 에 글 주소를 직접 넣습니다
+
+## ✍️ 쓰기 동작 (Server Actions)
+
+글·댓글·추천은 브라우저가 아니라 **서버에서** 처리합니다.
+버튼을 숨기는 것만으로는 막히지 않기 때문에, 권한 검사도 서버에서 합니다.
+
+| 동작 | 누가 | 코드 |
+| --- | --- | --- |
+| 로그인 · 회원가입 · 로그아웃 | 누구나 | `loginAction` · `signupAction` · `logoutAction` |
+| 커뮤니티 개설 · 가입/탈퇴 | 로그인 사용자 | `createCommunityAction` · `toggleJoinAction` |
+| 글쓰기 | 로그인 사용자 (자동 가입) | `writePostAction` |
+| 글 수정 | **작성자만** | `writePostAction` |
+| 글 삭제 | **작성자 또는 운영진** | `deletePostAction` |
+| 댓글 작성 | 로그인 사용자 | `writeCommentAction` |
+| 댓글 삭제 | 작성자 또는 운영진 | `deleteCommentAction` |
+| 추천 · 비추천 | 로그인 사용자 | `reactAction` |
+
+모두 `lib/server/actions.ts` 에 있고, 로그인 세션은 쿠키 한 개입니다
+(`lib/server/session.ts`). 데모라 비밀번호를 평문 비교하므로, 실제 서비스에서는
+Supabase Auth 같은 인증 서비스로 바꿔야 합니다.
 
 ## 🚀 실행 방법
 
 ```bash
-cd community
 npm install
-npm run dev     # http://localhost:5190
+npm run dev              # http://localhost:3000
+npm run build && npm start
 ```
 
-> 별도 설정 없이 바로 실행됩니다. 최초 실행 시 데모 커뮤니티/글/댓글이 자동으로 채워집니다.
->
-> **데모 계정**: `admin@demo.com` / `1234` (닉네임 "운영자")
-> 그 외 `gamja@demo.com`, `bung@demo.com` 도 비밀번호 `1234`.
+데모 계정: `admin@demo.com` / `1234`
 
 ## 🗄 데이터 저장 방식
 
-- **기본(데모) 모드**: 브라우저 `localStorage` 에 저장 — 백엔드 없이 완전 동작.
-  단, 데이터는 접속한 브라우저 안에서만 공유됩니다.
-- **프로덕션(다중 사용자) 모드**: `supabase-schema.sql` 을 Supabase 에서 실행하고
-  `.env` 에 아래 값을 넣으면 여러 사용자가 공유하는 실제 백엔드로 전환할 수 있습니다.
+저장소는 **환경에 따라 자동으로 갈립니다.** 화면과 동작 코드는 어느 쪽인지 모릅니다.
+(`lib/server/repo/`)
+
+| 환경 | 데이터 | 업로드 파일 |
+| --- | --- | --- |
+| 로컬 개발 (기본) | `data/*.json` | `public/uploads/` |
+| **배포 (Supabase 설정 시)** | **Supabase Postgres** | **Supabase Storage** |
+
+`SUPABASE_URL` 과 `SUPABASE_SERVICE_ROLE_KEY` 가 있으면 Supabase 를, 없으면 파일을 씁니다.
+
+> ⚠️ **배포에는 Supabase 가 필요합니다.** Vercel·Netlify 같은 서버리스 환경은
+> 파일 시스템이 요청마다 초기화돼서, 파일 저장 방식으로 올리면 글을 써도
+> 새로고침하면 사라집니다.
+
+게임 기록·XP 는 개인적인 데이터라 브라우저(localStorage)에 그대로 둡니다.
+
+### Supabase 연결하기
+
+1. [supabase.com](https://supabase.com) 에서 프로젝트를 만듭니다 (무료 플랜으로 충분).
+2. **SQL Editor** 에 `supabase-schema.sql` 전체를 붙여넣고 실행합니다.
+   테이블과 `uploads` 버킷이 함께 만들어집니다.
+3. **Settings → API** 에서 두 값을 복사해 `.env` 에 넣습니다.
 
 ```
-VITE_SUPABASE_URL=https://xxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...        # service_role 키 (절대 공개하지 마세요)
+NEXT_PUBLIC_SITE_URL=https://내도메인
 ```
 
-데이터 접근 계층은 `src/lib/store.ts` 한 곳에 모여 있고 모든 함수가 `Promise` 를
-반환하도록 설계돼 있어, 함수 내부만 Supabase 쿼리로 교체하면 UI 코드 수정 없이
-전환됩니다.
+`service_role` 키는 서버에서만 쓰이고 브라우저로 나가지 않습니다
+(`NEXT_PUBLIC_` 접두사를 붙이지 않은 이유). 권한 검사는 `lib/server/actions.ts`
+에서 하고, RLS 는 브라우저의 직접 접근을 막는 용도로 켜 둡니다.
+
+## 🔧 환경 변수
+
+```
+NEXT_PUBLIC_SITE_URL=https://example.com   # canonical · 사이트맵에 쓰임
+NEXT_PUBLIC_SITE_NAME=커뮤니티
+NEXT_PUBLIC_NAVER_VERIFY=...               # 네이버 소유확인 코드
+```
 
 ## 📁 구조
 
 ```
-community/
-├─ index.html
-├─ vite.config.ts
-├─ supabase-schema.sql        # 프로덕션 DB 스키마 + RLS
-├─ netlify.toml               # 배포 설정
-└─ src/
-   ├─ main.tsx / App.tsx      # 라우팅
-   ├─ lib/
-   │  ├─ types.ts             # 도메인 타입
-   │  ├─ store.ts             # 데이터 접근 계층 (localStorage ↔ Supabase 교체 지점)
-   │  ├─ seed.ts              # 데모 시드 데이터
-   │  ├─ auth.tsx             # 인증 컨텍스트
-   │  ├─ supabase.ts / utils.ts
-   ├─ lib/arcade.ts           # 게임 기록/XP + 익명 게시판 데이터 계층
-   ├─ games/                  # 미니게임 10종 + 게임 목록(index.ts)
-   ├─ components/             # Layout · Avatar · CommunityCard
-                              #  · GameModal · FreeBoard
-   └─ pages/                  # Home · Login · Signup · Create · CommunityHome
-                              #  · Write · PostDetail · Settings · MyPage · Games
+app/                      # Next.js App Router (서버 렌더링)
+├─ layout.tsx             #  공통 레이아웃 · 기본 메타
+├─ page.tsx               #  홈 (최신 글 목록)
+├─ c/[slug]/page.tsx      #  커뮤니티 홈
+├─ c/[slug]/post/[id]/    #  ★ 글 상세 — 검색 노출의 핵심
+├─ explore · ranking · browse/[mode]
+├─ sitemap.ts · robots.ts · rss.xml/route.ts
+lib/
+├─ server/db.ts           # 서버 데이터 (Supabase 교체 지점)
+├─ server/queries.ts      # 화면용 조회 함수
+├─ site.ts · types.ts · seed.ts · utils.ts · emoji.ts
+├─ games/ · ads/ · me/ · login · signup · create
+components/               # 화면 조각 (client)
+games/                    # 미니게임 12종
+lib/
+├─ server/repo/           # 저장소 — file.ts(로컬) · supabase.ts(배포)
+├─ server/actions.ts      # 쓰기 동작 (Server Actions) · 권한 검사
+├─ server/uploads.ts      # 파일 저장 (로컬 폴더 ↔ Supabase Storage)
+├─ server/board.ts        # 익명 게시판
+└─ server/ads.ts          # 광고 배너
 ```
 
 ## 🛠 기술 스택
 
-React 19 · Vite · TypeScript · Tailwind CSS · React Router v7 · (선택) Supabase
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · (선택) Supabase
+
+## 🎮 게임 랜드 (`/games`)
+
+미니게임 12종(다트·룰렛·슬롯·복권·파이프·스네이크·브레이크아웃·풍선·반응속도·
+짝 맞추기·일반상식 퀴즈·카지노 OX 퀴즈)과 익명 자유게시판이 한 화면에 있습니다.
+게임 XP와 게시판 활동을 합쳐 **마이 랜드**가 6단계로 자랍니다.
+
+게임 기록은 개인적인 데이터라 브라우저에 두고, 익명 게시판 글은 서로 보여야 하므로
+서버에 저장합니다.

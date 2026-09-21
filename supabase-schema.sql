@@ -1,149 +1,167 @@
 -- ============================================================
 -- 커뮤니티 플랫폼 · Supabase 스키마
 -- ------------------------------------------------------------
--- 현재 앱은 백엔드 없이 localStorage 로 완전히 동작하는 프로토타입입니다.
--- 여러 사용자가 공유하는 실제 서비스로 전환하려면:
---   1) Supabase 프로젝트 생성 후 이 SQL 을 SQL Editor 에서 실행
---   2) .env 에 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 입력
---   3) src/lib/store.ts 의 각 함수 내부를 supabase 쿼리로 교체
---      (함수 시그니처는 그대로이므로 UI 는 수정 불필요)
+-- 설치 방법
+--   1) Supabase 프로젝트 생성
+--   2) SQL Editor 에 이 파일 전체를 붙여넣고 실행
+--   3) Storage 에 'uploads' 버킷을 만들고 Public 으로 설정
+--   4) .env 에 아래 3개를 넣으면 자동으로 Supabase 를 씁니다
+--        SUPABASE_URL=https://xxxx.supabase.co
+--        SUPABASE_SERVICE_ROLE_KEY=...
+--        NEXT_PUBLIC_SITE_URL=https://내도메인
+--
+-- 이 앱은 서버(Next.js)에서만 DB 에 접근하고, 권한 검사는 서버 코드
+-- (lib/server/actions.ts)에서 합니다. 그래서 service_role 키를 쓰고
+-- RLS 는 "클라이언트 직접 접근 차단" 용도로만 켜 둡니다.
 -- ============================================================
 
--- ---------- 프로필 (auth.users 확장) ----------
-create table if not exists profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  nickname text unique not null,
-  avatar_color text not null default '#6366f1',
-  created_at timestamptz not null default now()
+-- ---------- 회원 ----------
+create table if not exists users (
+  id            text primary key,
+  email         text unique not null,
+  nickname      text unique not null,
+  password      text not null,          -- 데모용 평문. 실제 서비스는 Supabase Auth 로 교체
+  avatar_color  text not null default '#6366f1',
+  created_at    timestamptz not null default now()
 );
 
 -- ---------- 커뮤니티 ----------
 create table if not exists communities (
-  id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
-  name text not null,
-  description text not null default '',
-  category text not null default '기타',
-  theme_color text not null default '#6366f1',
-  owner_id uuid not null references profiles(id) on delete cascade,
-  is_public boolean not null default true,
-  created_at timestamptz not null default now()
+  id            text primary key,
+  slug          text unique not null,
+  name          text not null,
+  description   text not null default '',
+  category      text not null default '기타',
+  topics        text[] not null default '{}',
+  region        text,
+  kind          text not null default 'normal' check (kind in ('normal','fan','featured')),
+  theme_color   text not null default '#6366f1',
+  emoji         text,
+  avatar_url    text,                   -- 대표 이미지 (Storage 주소)
+  title_url     text,                   -- 타이틀 이미지 (Storage 주소)
+  owner_id      text not null references users(id) on delete cascade,
+  is_public     boolean not null default true,
+  created_at    timestamptz not null default now()
 );
+create index if not exists communities_slug_idx on communities (slug);
 
 -- ---------- 게시판 ----------
 create table if not exists boards (
-  id uuid primary key default gen_random_uuid(),
-  community_id uuid not null references communities(id) on delete cascade,
-  name text not null,
-  "order" int not null default 0,
-  is_notice boolean not null default false,
-  created_at timestamptz not null default now()
+  id            text primary key,
+  community_id  text not null references communities(id) on delete cascade,
+  name          text not null,
+  "order"       int not null default 0,
+  is_notice     boolean not null default false,
+  created_at    timestamptz not null default now()
 );
+create index if not exists boards_community_idx on boards (community_id);
 
 -- ---------- 멤버십 ----------
 create table if not exists memberships (
-  id uuid primary key default gen_random_uuid(),
-  community_id uuid not null references communities(id) on delete cascade,
-  user_id uuid not null references profiles(id) on delete cascade,
-  role text not null default 'member' check (role in ('owner','admin','member')),
-  joined_at timestamptz not null default now(),
+  id            text primary key,
+  community_id  text not null references communities(id) on delete cascade,
+  user_id       text not null references users(id) on delete cascade,
+  role          text not null default 'member' check (role in ('owner','admin','member')),
+  joined_at     timestamptz not null default now(),
   unique (community_id, user_id)
 );
+create index if not exists memberships_community_idx on memberships (community_id);
+create index if not exists memberships_user_idx on memberships (user_id);
 
--- ---------- 게시글 ----------
+-- ---------- 글 ----------
 create table if not exists posts (
-  id uuid primary key default gen_random_uuid(),
-  community_id uuid not null references communities(id) on delete cascade,
-  board_id uuid not null references boards(id) on delete cascade,
-  author_id uuid not null references profiles(id) on delete cascade,
-  title text not null,
-  content text not null default '',
-  views int not null default 0,
-  pinned boolean not null default false,
-  created_at timestamptz not null default now()
+  id            text primary key,
+  community_id  text not null references communities(id) on delete cascade,
+  board_id      text not null references boards(id) on delete cascade,
+  author_id     text not null references users(id) on delete cascade,
+  title         text not null,
+  content       text not null default '',
+  tags          text[] not null default '{}',
+  views         int not null default 0,
+  liked_by      text[] not null default '{}',
+  disliked_by   text[] not null default '{}',
+  attachments   jsonb not null default '[]'::jsonb,   -- 사진·동영상·링크
+  pinned        boolean not null default false,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz
 );
+create index if not exists posts_community_idx on posts (community_id, created_at desc);
+create index if not exists posts_board_idx on posts (board_id);
+create index if not exists posts_created_idx on posts (created_at desc);
 
 -- ---------- 댓글 ----------
 create table if not exists comments (
-  id uuid primary key default gen_random_uuid(),
-  post_id uuid not null references posts(id) on delete cascade,
-  author_id uuid not null references profiles(id) on delete cascade,
-  content text not null,
-  parent_id uuid references comments(id) on delete cascade,
-  created_at timestamptz not null default now()
+  id            text primary key,
+  post_id       text not null references posts(id) on delete cascade,
+  author_id     text not null references users(id) on delete cascade,
+  content       text not null,
+  parent_id     text,
+  liked_by      text[] not null default '{}',
+  created_at    timestamptz not null default now()
 );
+create index if not exists comments_post_idx on comments (post_id, created_at);
 
--- ---------- 추천/비추천 (게시글) ----------
-create table if not exists post_reactions (
-  post_id uuid not null references posts(id) on delete cascade,
-  user_id uuid not null references profiles(id) on delete cascade,
-  kind text not null check (kind in ('like','dislike')),
-  created_at timestamptz not null default now(),
-  primary key (post_id, user_id)
+-- ---------- 익명 자유게시판 ----------
+create table if not exists anon_posts (
+  id            text primary key,
+  category      text not null default '자유',
+  nickname      text not null,
+  color         text not null,
+  title         text not null,
+  content       text not null,
+  password      text not null,          -- 삭제용 4자리
+  author_key    text not null,          -- 브라우저 쿠키로 구분하는 익명 신원
+  views         int not null default 0,
+  liked_by      text[] not null default '{}',
+  score_badge   text,
+  created_at    timestamptz not null default now()
 );
+create index if not exists anon_posts_created_idx on anon_posts (created_at desc);
+create index if not exists anon_posts_author_idx on anon_posts (author_key);
 
--- ---------- 댓글 좋아요 ----------
-create table if not exists comment_likes (
-  comment_id uuid not null references comments(id) on delete cascade,
-  user_id uuid not null references profiles(id) on delete cascade,
-  primary key (comment_id, user_id)
+create table if not exists anon_comments (
+  id            text primary key,
+  post_id       text not null references anon_posts(id) on delete cascade,
+  nickname      text not null,
+  color         text not null,
+  content       text not null,
+  password      text not null,
+  author_key    text not null,
+  created_at    timestamptz not null default now()
 );
+create index if not exists anon_comments_post_idx on anon_comments (post_id, created_at);
 
--- 조회 성능용 인덱스
-create index if not exists idx_posts_community on posts(community_id, created_at desc);
-create index if not exists idx_posts_board on posts(board_id, created_at desc);
-create index if not exists idx_comments_post on comments(post_id, created_at);
-create index if not exists idx_memberships_community on memberships(community_id);
+-- ---------- 광고 배너 ----------
+create table if not exists ad_banners (
+  id            text primary key,
+  title         text not null,
+  image         text not null,          -- Storage 주소
+  link          text,
+  active        boolean not null default true,
+  sort_order    int not null default 0, -- 노출 순서
+  created_at    timestamptz not null default now()
+);
+create index if not exists ad_banners_order_idx on ad_banners (sort_order);
 
 -- ============================================================
--- Row Level Security (RLS)
+-- RLS — 브라우저에서의 직접 접근을 막는다.
+-- 서버(Next.js)는 service_role 키를 쓰므로 RLS 를 우회한다.
 -- ============================================================
-alter table profiles         enable row level security;
-alter table communities      enable row level security;
-alter table boards           enable row level security;
-alter table memberships      enable row level security;
-alter table posts            enable row level security;
-alter table comments         enable row level security;
-alter table post_reactions   enable row level security;
-alter table comment_likes    enable row level security;
+alter table users        enable row level security;
+alter table communities  enable row level security;
+alter table boards       enable row level security;
+alter table memberships  enable row level security;
+alter table posts        enable row level security;
+alter table comments     enable row level security;
+alter table anon_posts   enable row level security;
+alter table anon_comments enable row level security;
+alter table ad_banners   enable row level security;
 
--- 읽기: 공개 데이터는 누구나 열람
-create policy "read profiles"     on profiles       for select using (true);
-create policy "read communities"  on communities    for select using (true);
-create policy "read boards"       on boards         for select using (true);
-create policy "read memberships"  on memberships    for select using (true);
-create policy "read posts"        on posts          for select using (true);
-create policy "read comments"     on comments       for select using (true);
-create policy "read reactions"    on post_reactions for select using (true);
-create policy "read comment_likes" on comment_likes for select using (true);
-
--- 프로필: 본인만 생성/수정
-create policy "insert own profile" on profiles for insert with check (auth.uid() = id);
-create policy "update own profile" on profiles for update using (auth.uid() = id);
-
--- 커뮤니티: 로그인 유저가 개설, 개설자만 수정/삭제
-create policy "create community" on communities for insert with check (auth.uid() = owner_id);
-create policy "update own community" on communities for update using (auth.uid() = owner_id);
-create policy "delete own community" on communities for delete using (auth.uid() = owner_id);
-
--- 게시판: 커뮤니티 운영자만 생성/삭제
-create policy "manage boards" on boards for all using (
-  exists (select 1 from communities c where c.id = boards.community_id and c.owner_id = auth.uid())
-);
-
--- 멤버십: 본인 가입/탈퇴
-create policy "join community"  on memberships for insert with check (auth.uid() = user_id);
-create policy "leave community" on memberships for delete using (auth.uid() = user_id);
-
--- 게시글: 로그인 유저 작성, 작성자만 수정/삭제
-create policy "create post"     on posts for insert with check (auth.uid() = author_id);
-create policy "update own post" on posts for update using (auth.uid() = author_id);
-create policy "delete own post" on posts for delete using (auth.uid() = author_id);
-
--- 댓글: 로그인 유저 작성, 작성자만 삭제
-create policy "create comment"     on comments for insert with check (auth.uid() = author_id);
-create policy "delete own comment" on comments for delete using (auth.uid() = author_id);
-
--- 반응/좋아요: 본인 것만
-create policy "react post"   on post_reactions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "like comment" on comment_likes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+-- ============================================================
+-- Storage — 업로드 버킷
+-- ------------------------------------------------------------
+-- 아래 한 줄을 실행하거나, 대시보드에서 'uploads' 버킷을 Public 으로 만드세요.
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('uploads', 'uploads', true)
+on conflict (id) do nothing;

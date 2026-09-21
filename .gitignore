@@ -1,6 +1,12 @@
 node_modules
 dist
+.next
+data
 .env
 .env.local
 *.log
 .DS_Store
+
+# 업로드된 파일 (서버에 저장되는 사용자 콘텐츠)
+public/uploads/
+tsconfig.tsbuildinfo
