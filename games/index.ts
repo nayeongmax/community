@@ -73,12 +73,13 @@ export const GAMES: GameDef[] = [
     id: 'slot',
     title: '슬롯머신',
     emoji: '🎰',
-    tagline: '5×3 · 라인 5개',
-    howTo: '5열 3행을 돌려 라인 5개에서 왼쪽부터 3개 이상 같은 그림을 맞춥니다',
+    tagline: '크레딧 100 · 5라인',
+    howTo: '크레딧을 걸고 돌립니다 · 왼쪽 릴부터 3개 이상 · WILD 는 아무 그림이나 대신 · 💎 스캐터 3개면 프리스핀',
     card: 'bg-gradient-to-br from-slate-800 to-slate-700 border-slate-700 text-white',
     accent: 'text-amber-300',
+    // 점수 = 남은 크레딧 (시작 100). 본전이면 25XP 쯤 된다.
     xpRate: 0.25,
-    maxXp: 50,
+    maxXp: 60,
     Component: SlotMachine,
   },
   {

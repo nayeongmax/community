@@ -5,7 +5,7 @@ import { GameProps } from './types';
 
 /** 🐍 스네이크 — 방향키(또는 화면 버튼)로 사과를 먹고 길어진다. */
 
-const CELL = 20;
+const CELL = 27;
 const COLS = 16;
 const ROWS = 16;
 const W = COLS * CELL;
@@ -156,7 +156,7 @@ export default function Snake({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-sm font-bold text-slate-600">
+      <p className="text-lg font-bold text-slate-700">
         점수 <span className="text-emerald-600 text-lg">{score}</span>
       </p>
 

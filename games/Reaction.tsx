@@ -89,7 +89,7 @@ export default function Reaction({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
+      <div className="flex items-center gap-2 text-base font-bold text-slate-700">
         라운드 {Math.min(times.length + (phase === 'over' ? 0 : 1), ROUNDS)}/{ROUNDS}
         <span className="ml-2 flex gap-1">
           {Array.from({ length: ROUNDS }).map((_, i) => (
@@ -109,12 +109,12 @@ export default function Reaction({ onFinish }: GameProps) {
 
       <button
         onClick={click}
-        className={`w-[320px] h-[300px] rounded-2xl text-white font-black text-xl transition-colors ${bg}`}
+        className={`w-[440px] h-[380px] rounded-2xl text-white font-black text-3xl leading-relaxed transition-colors ${bg}`}
       >
         {text}
       </button>
 
-      <div className="flex flex-wrap justify-center gap-1.5 text-xs w-[320px]">
+      <div className="flex flex-wrap justify-center gap-2 text-sm w-[440px]">
         {times.map((t, i) => (
           <span
             key={i}

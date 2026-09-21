@@ -6,8 +6,8 @@ import { GameProps } from './types';
 /** 🎈 풍선 터뜨리기 — 30초 동안 올라오는 풍선을 클릭해서 터뜨린다. 작을수록 고득점. */
 
 const DURATION = 30;
-const W = 320;
-const H = 380;
+const W = 440;
+const H = 520;
 const COLORS = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
 
 interface Balloon {
@@ -96,7 +96,7 @@ export default function BalloonPop({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-[320px] text-sm font-bold">
+      <div className="flex items-center justify-between w-[440px] text-base font-bold">
         <span className="text-slate-600">
           점수 <span className="text-rose-500 text-lg">{score}</span>
         </span>
@@ -145,7 +145,7 @@ export default function BalloonPop({ onFinish }: GameProps) {
               {phase === 'over' && (
                 <p className="text-2xl font-black text-slate-800 mb-1">🎈 {score}점</p>
               )}
-              <p className="text-sm text-slate-500 mb-3">작은 풍선일수록 점수가 높아요</p>
+              <p className="text-base text-slate-500 mb-4">작은 풍선일수록 점수가 높아요</p>
               <button
                 onClick={start}
                 className="bg-rose-500 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-rose-600"

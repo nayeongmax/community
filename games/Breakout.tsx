@@ -5,24 +5,24 @@ import { GameProps } from './types';
 
 /** 🧱 브레이크아웃 — 마우스로 패들을 움직여 벽돌을 모두 깬다. */
 
-const W = 320;
-const H = 400;
-const PADDLE_W = 66;
-const PADDLE_H = 10;
-const BALL_R = 6;
+const W = 440;
+const H = 550;
+const PADDLE_W = 92;
+const PADDLE_H = 14;
+const BALL_R = 8;
 const COLS = 6;
 const ROWS = 5;
-const BRICK_W = 48;
-const BRICK_H = 16;
-const GAP = 4;
-const OFFSET_X = 6;
-const OFFSET_Y = 46;
+const BRICK_W = 66;
+const BRICK_H = 22;
+const GAP = 6;
+const OFFSET_X = 7;
+const OFFSET_Y = 62;
 const ROW_COLORS = ['#f43f5e', '#f97316', '#eab308', '#22c55e', '#3b82f6'];
 
 export default function Breakout({ onFinish }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const paddleX = useRef(W / 2);
-  const ball = useRef({ x: W / 2, y: 300, vx: 2.4, vy: -3.4 });
+  const ball = useRef({ x: W / 2, y: 412, vx: 3.3, vy: -4.7 });
   const bricks = useRef<boolean[]>([]);
   const scoreRef = useRef(0);
   const livesRef = useRef(3);
@@ -175,8 +175,8 @@ export default function Breakout({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-[320px] text-sm font-bold text-slate-600">
-        <span>점수 <span className="text-amber-500 text-lg">{score}</span></span>
+      <div className="flex items-center justify-between w-[440px] text-base font-bold text-slate-700">
+        <span>점수 <span className="text-amber-500 text-2xl">{score}</span></span>
         <span>{'❤️'.repeat(Math.max(0, lives))}</span>
       </div>
 
@@ -192,11 +192,11 @@ export default function Breakout({ onFinish }: GameProps) {
         {phase !== 'play' && (
           <div className="absolute inset-0 grid place-items-center bg-slate-900/80 text-center">
             <div>
-              {phase === 'over' && <p className="text-2xl font-black text-white mb-1">🧱 {score}점</p>}
-              <p className="text-xs text-slate-300 mb-3">마우스를 좌우로 움직여 공을 받으세요</p>
+              {phase === 'over' && <p className="text-4xl font-black text-white mb-2">🧱 {score}점</p>}
+              <p className="text-base text-slate-200 mb-4">마우스를 좌우로 움직여 공을 받으세요</p>
               <button
                 onClick={start}
-                className="bg-amber-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl hover:bg-amber-300"
+                className="bg-amber-400 text-slate-900 text-lg font-bold px-8 py-3 rounded-xl hover:bg-amber-300"
               >
                 {phase === 'over' ? '다시하기' : '시작하기'}
               </button>

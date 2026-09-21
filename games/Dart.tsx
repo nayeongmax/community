@@ -5,7 +5,7 @@ import { GameProps } from './types';
 
 /** 🎯 다트 던지기 — 흔들리는 조준선을 보고 클릭. 바람이 셀수록 많이 밀린다. 5발 합산. */
 
-const SIZE = 320;
+const SIZE = 440;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
 const THROWS = 5;
@@ -138,7 +138,7 @@ export default function Dart({ onFinish }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-[320px] text-sm font-bold text-slate-600">
+      <div className="flex items-center justify-between w-[440px] text-base font-bold text-slate-700">
         <span>
           바람{' '}
           <span className={windView.strength >= 2 ? 'text-rose-500' : 'text-emerald-600'}>
@@ -146,7 +146,7 @@ export default function Dart({ onFinish }: GameProps) {
           </span>
         </span>
         <span>
-          {thrown}/{THROWS}발 · 합산 <span className="text-rose-500 text-lg">{total}</span>
+          {thrown}/{THROWS}발 · 합산 <span className="text-rose-500 text-2xl">{total}</span>
         </span>
       </div>
 
@@ -163,7 +163,7 @@ export default function Dart({ onFinish }: GameProps) {
           <div className="absolute inset-0 grid place-items-center bg-slate-900/80 text-center">
             <div>
               <p className="text-2xl font-black text-white mb-1">🎯 {total}점</p>
-              <p className="text-xs text-slate-300 mb-3">한가운데는 50점 (5발 만점 250점)</p>
+              <p className="text-base text-slate-200 mb-4">한가운데는 50점 (5발 만점 250점)</p>
               <button
                 onClick={restart}
                 className="bg-rose-500 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-rose-400"
@@ -175,7 +175,7 @@ export default function Dart({ onFinish }: GameProps) {
         )}
       </div>
 
-      <p className="h-5 text-sm font-bold text-slate-500">
+      <p className="h-6 text-base font-bold text-slate-600">
         {last === null ? '과녁을 클릭해서 던지세요' : last > 0 ? `+${last}점!` : '빗나갔습니다…'}
       </p>
     </div>
