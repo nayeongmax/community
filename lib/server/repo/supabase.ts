@@ -11,17 +11,30 @@ import { Repo } from './types';
 
 let client: SupabaseClient | null = null;
 
+/**
+ * 서버용 비밀 키.
+ * Supabase 가 키 이름을 바꾸는 중이라 둘 다 받는다.
+ *   - 새 이름 : SUPABASE_SECRET_KEY        (sb_secret_... )
+ *   - 옛 이름 : SUPABASE_SERVICE_ROLE_KEY  (eyJ... JWT)
+ * 키를 재발급하면 이 값만 갈아 끼우면 된다.
+ */
+export function supabaseKey(): string | undefined {
+  return process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+}
+
 export function supabase(): SupabaseClient {
   if (client) return client;
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 가 없습니다.');
+  const key = supabaseKey();
+  if (!url || !key) {
+    throw new Error('SUPABASE_URL / SUPABASE_SECRET_KEY 가 없습니다.');
+  }
   client = createClient(url, key, { auth: { persistSession: false } });
   return client;
 }
 
 export function hasSupabase(): boolean {
-  return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return !!(process.env.SUPABASE_URL && supabaseKey());
 }
 
 /* ---------- DB 행 ↔ 앱 타입 ---------- */

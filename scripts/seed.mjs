@@ -8,30 +8,19 @@
 // 그대로 읽어 Supabase 로 옮긴다. public/uploads 의 파일도 Storage 로 함께 올리고
 // 주소를 바꿔 준다.
 //
-// .env.local 의 SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 를 씁니다.
+// .env.local 의 SUPABASE_URL / SUPABASE_SECRET_KEY 를 씁니다.
 
 import { createClient } from '@supabase/supabase-js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { loadEnv, supabaseKey } from './env.mjs';
 
-/* ---------- .env.local 읽기 ---------- */
-for (const file of ['.env.local', '.env']) {
-  const p = path.join(process.cwd(), file);
-  if (!fs.existsSync(p)) continue;
-  for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
-    const t = line.trim();
-    if (!t || t.startsWith('#')) continue;
-    const i = t.indexOf('=');
-    if (i < 0) continue;
-    const key = t.slice(0, i).trim();
-    if (!process.env[key]) process.env[key] = t.slice(i + 1).trim();
-  }
-}
+loadEnv();
 
 const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const key = supabaseKey();
 if (!url || !key) {
-  console.error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 가 없습니다. .env.local 을 확인하세요.');
+  console.error('SUPABASE_URL / SUPABASE_SECRET_KEY 가 없습니다. .env.local 을 확인하세요.');
   process.exit(1);
 }
 
