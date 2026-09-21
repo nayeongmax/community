@@ -219,6 +219,9 @@ export const fileRepo: Repo = {
       .filter((c) => c.postId === postId)
       .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
   },
+  async listCommentsSince(since) {
+    return (await readMain()).comments.filter((c) => c.createdAt >= since);
+  },
   async countComments(postIds) {
     const db = await readMain();
     return Object.fromEntries(

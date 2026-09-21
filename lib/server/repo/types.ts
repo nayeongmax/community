@@ -52,6 +52,8 @@ export interface Repo {
 
   // 댓글
   listComments(postId: string): Promise<Comment[]>;
+  /** since 이후에 달린 댓글 — 홈 통계·'지금 뜨는 커뮤니티' 계산용 */
+  listCommentsSince(since: string): Promise<Comment[]>;
   countComments(postIds: string[]): Promise<Record<string, number>>;
   createComment(c: Comment): Promise<void>;
   getComment(id: string): Promise<Comment | null>;
