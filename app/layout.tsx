@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
 import { site } from '../lib/site';
 import './globals.css';
+import StorageWarning from '../components/StorageWarning';
 
 const noto = Noto_Sans_KR({
   subsets: ['latin'],
@@ -31,7 +32,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={noto.variable}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <StorageWarning />
+        {children}
+      </body>
     </html>
   );
 }
