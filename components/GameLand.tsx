@@ -20,6 +20,8 @@ interface Props {
   sort: BoardSort;
   /** 로그인한 사용자 이름 (헤더 표시용) */
   nickname?: string;
+  /** 광고 배너 자리 (서버에서 그려 내려온다) */
+  ads?: React.ReactNode;
 }
 
 function GameCard({
@@ -61,7 +63,15 @@ function GameCard({
   );
 }
 
-export default function GameLand({ posts, comments, contribution, category, sort, nickname }: Props) {
+export default function GameLand({
+  posts,
+  comments,
+  contribution,
+  category,
+  sort,
+  nickname,
+  ads,
+}: Props) {
   const router = useRouter();
   const [profile, setProfile] = useState(getProfile);
   const [playing, setPlaying] = useState<GameDef | null>(null);
@@ -196,6 +206,8 @@ export default function GameLand({ posts, comments, contribution, category, sort
               </div>
             )}
           </section>
+
+          {ads}
 
           <AnonBoard
             posts={posts}

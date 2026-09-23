@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { site } from '../../lib/site';
-import { currentUser } from '../../lib/server/session';
+import { currentUser, isSiteAdmin } from '../../lib/server/session';
 import { logoutAction } from '../../lib/server/actions';
 import { userEmoji } from '../../lib/emoji';
 import SideNav from '../../components/SideNav';
@@ -8,7 +8,7 @@ import SideNav from '../../components/SideNav';
 
 /** 커뮤니티 화면 공통 껍데기 (게임 랜드는 자체 헤더를 써서 이 밖에 있다) */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const me = await currentUser();
+  const [me, admin] = await Promise.all([currentUser(), isSiteAdmin()]);
   return (
     <div className="min-h-screen flex flex-col">
         <header className="bg-white border-b border-hair sticky top-0 z-30">
@@ -73,10 +73,14 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <Link href="/games" className="hover:text-ink-mute">
               게임 랜드
             </Link>
-            <span>·</span>
-            <Link href="/ads" className="hover:text-ink-mute">
-              광고 배너
-            </Link>
+            {admin && (
+              <>
+                <span>·</span>
+                <Link href="/ads" className="hover:text-ink-mute">
+                  광고 배너
+                </Link>
+              </>
+            )}
             <span>·</span>
             <a href="/rss.xml" className="hover:text-ink-mute">
               RSS

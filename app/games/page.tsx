@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import type { BoardCategory, BoardSort } from '../../lib/board-types';
 import { listAnonComments, listAnonPosts, myBoardContribution } from '../../lib/server/board';
-import { currentUser } from '../../lib/server/session';
+import { currentUser, isSiteAdmin } from '../../lib/server/session';
+import { listActiveAds } from '../../lib/server/ads';
+import AdSlots from '../../components/AdSlots';
 import GameLand from '../../components/GameLand';
 
 export const metadata: Metadata = {
@@ -21,10 +23,12 @@ export default async function GamesPage({
   const category = (sp.category ?? '전체') as BoardCategory | '전체';
   const sort = (sp.sort ?? 'new') as BoardSort;
 
-  const [posts, contribution, me] = await Promise.all([
+  const [posts, contribution, me, ads, admin] = await Promise.all([
     listAnonPosts({ category, sort }),
     myBoardContribution(),
     currentUser(),
+    listActiveAds(),
+    isSiteAdmin(),
   ]);
 
   // 펼쳤을 때 바로 보이도록 댓글도 함께 내려준다
@@ -40,6 +44,7 @@ export default async function GamesPage({
       category={category}
       sort={sort}
       nickname={me?.nickname}
+      ads={<AdSlots ads={ads} isAdmin={admin} dark />}
     />
   );
 }

@@ -9,7 +9,7 @@ import { Attachment, Board, Comment, Community, Membership, Post, User } from '.
 import { colorFromString, slugify, uid } from '../utils';
 import { repo } from './repo';
 import { removeUpload, saveUpload } from './uploads';
-import { clearSession, currentUser, setSession } from './session';
+import { clearSession, currentUser, isSiteAdmin, setSession } from './session';
 
 export interface ActionState {
   error?: string;
@@ -396,6 +396,15 @@ export async function deleteCommentAction(
 }
 
 // ---------------- 광고 배너 ----------------
+//
+// 배너는 사이트 전체에 보이고 수익과 직결되므로 사이트 운영자만 다룰 수 있다.
+// 화면에서 버튼을 숨기는 것만으로는 부족해서, 동작마다 여기서 다시 확인한다.
+
+/** 운영자가 아니면 막는다 */
+async function requireSiteAdmin(): Promise<boolean> {
+  return isSiteAdmin();
+}
+
 
 export async function createBannerAction(
   _prev: ActionState,
@@ -405,6 +414,7 @@ export async function createBannerAction(
   const image = String(form.get('image') ?? '');
   const link = String(form.get('link') ?? '').trim() || undefined;
 
+  if (!(await requireSiteAdmin())) return { error: '광고 배너는 운영자만 등록할 수 있습니다.' };
   if (!title) return { error: '배너 이름을 입력해 주세요.' };
   if (!image) return { error: '이미지를 올려 주세요.' };
 
@@ -413,11 +423,13 @@ export async function createBannerAction(
   await repo.createAd(newBanner({ title, image, link }), list.length);
 
   revalidatePath('/');
+  revalidatePath('/games');
   revalidatePath('/ads');
   return { ok: true };
 }
 
 export async function moveBannerAction(id: string, dir: -1 | 1): Promise<void> {
+  if (!(await requireSiteAdmin())) return;
   const list = await repo.listAds();
   const i = list.findIndex((b) => b.id === id);
   const j = i + dir;
@@ -425,22 +437,27 @@ export async function moveBannerAction(id: string, dir: -1 | 1): Promise<void> {
   [list[i], list[j]] = [list[j], list[i]];
   await repo.reorderAds(list.map((b) => b.id));
   revalidatePath('/');
+  revalidatePath('/games');
   revalidatePath('/ads');
 }
 
 export async function toggleBannerAction(id: string): Promise<void> {
+  if (!(await requireSiteAdmin())) return;
   const list = await repo.listAds();
   const b = list.find((x) => x.id === id);
   if (b) await repo.updateAd(id, { active: !b.active });
   revalidatePath('/');
+  revalidatePath('/games');
   revalidatePath('/ads');
 }
 
 export async function deleteBannerAction(id: string): Promise<void> {
+  if (!(await requireSiteAdmin())) return;
   const list = await repo.listAds();
   const target = list.find((b) => b.id === id);
   if (target) await removeUpload(target.image);
   await repo.deleteAd(id);
   revalidatePath('/');
+  revalidatePath('/games');
   revalidatePath('/ads');
 }
