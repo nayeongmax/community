@@ -43,21 +43,31 @@ type Row = Record<string, unknown>;
 
 const toUser = (r: Row): User => ({
   id: r.id as string,
-  email: r.email as string,
+  loginId: (r.login_id as string) ?? '',
+  name: (r.name as string) ?? '',
   nickname: r.nickname as string,
+  phone: (r.phone as string) ?? undefined,
+  birthday: (r.birthday as string) ?? undefined,
+  email: (r.email as string) ?? undefined,
   password: r.password as string,
   avatarColor: r.avatar_color as string,
   createdAt: r.created_at as string,
 });
 
-const fromUser = (u: User): Row => ({
-  id: u.id,
-  email: u.email,
-  nickname: u.nickname,
-  password: u.password,
-  avatar_color: u.avatarColor,
-  created_at: u.createdAt,
-});
+const fromUser = (u: Partial<User>): Row => {
+  const row: Row = {};
+  if (u.id !== undefined) row.id = u.id;
+  if (u.loginId !== undefined) row.login_id = u.loginId;
+  if (u.name !== undefined) row.name = u.name;
+  if (u.nickname !== undefined) row.nickname = u.nickname;
+  if (u.phone !== undefined) row.phone = u.phone;
+  if (u.birthday !== undefined) row.birthday = u.birthday;
+  if (u.email !== undefined) row.email = u.email;
+  if (u.password !== undefined) row.password = u.password;
+  if (u.avatarColor !== undefined) row.avatar_color = u.avatarColor;
+  if (u.createdAt !== undefined) row.created_at = u.createdAt;
+  return row;
+};
 
 const toCommunity = (r: Row): Community => ({
   id: r.id as string,
@@ -272,11 +282,11 @@ export const supabaseRepo: Repo = {
     const { data } = await supabase().from('users').select('*').eq('id', id).maybeSingle();
     return data ? toUser(data) : null;
   },
-  async getUserByEmail(email) {
+  async getUserByLoginId(loginId) {
     const { data } = await supabase()
       .from('users')
       .select('*')
-      .ilike('email', email)
+      .ilike('login_id', loginId)
       .maybeSingle();
     return data ? toUser(data) : null;
   },
@@ -290,6 +300,9 @@ export const supabaseRepo: Repo = {
   },
   async createUser(user) {
     await supabase().from('users').insert(fromUser(user));
+  },
+  async updateUser(id, patch) {
+    await supabase().from('users').update(fromUser(patch)).eq('id', id);
   },
   async listUsersByIds(ids) {
     if (ids.length === 0) return [];

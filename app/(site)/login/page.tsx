@@ -13,13 +13,23 @@ export default function LoginPage() {
   return (
     <div className="max-w-sm mx-auto mt-6">
       <div className="bg-white rounded-2xl border border-hair p-6">
-        <h1 className="text-xl font-black text-ink mb-1">로그인</h1>
-        <p className="text-sm text-ink-mute mb-5">
-          데모 계정: <b className="text-ink">admin@demo.com</b> / <b className="text-ink">1234</b>
-        </p>
+        <h1 className="text-xl font-black text-ink mb-5">로그인</h1>
         <form action={action} className="space-y-3">
-          <input type="email" name="email" placeholder="이메일" required className={field} />
-          <input type="password" name="password" placeholder="비밀번호" required className={field} />
+          <input
+            name="loginId"
+            placeholder="아이디"
+            autoComplete="username"
+            required
+            className={field}
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="비밀번호"
+            autoComplete="current-password"
+            required
+            className={field}
+          />
           {state.error && <p className="text-sm text-rose-500">{state.error}</p>}
           <SubmitButton
             className="w-full bg-ink text-white font-bold py-2.5 rounded-lg hover:bg-ink-soft"

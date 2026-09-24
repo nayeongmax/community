@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { readAds } from '../../../lib/server/ads';
-import { currentUser, isSiteAdmin, siteAdminEmails } from '../../../lib/server/session';
+import { currentUser, isSiteAdmin } from '../../../lib/server/session';
 import AdManager from '../../../components/AdManager';
 
 export const metadata = { title: '광고 배너 관리', robots: { index: false } };
@@ -20,10 +20,7 @@ export default async function AdsPage() {
         <p className="text-sm text-ink-mute mt-2 leading-relaxed">
           광고 배너는 사이트 전체에 노출되기 때문에 운영자 계정으로만 다룰 수 있어요.
           <br />
-          지금 <b className="text-ink">{me.email}</b> 로 로그인되어 있습니다.
-        </p>
-        <p className="text-xs text-ink-faint mt-4">
-          운영자 계정: {siteAdminEmails().join(', ')}
+          지금 <b className="text-ink">{me.loginId}</b> 아이디로 로그인되어 있습니다.
         </p>
         <Link
           href="/"

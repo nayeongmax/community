@@ -18,12 +18,17 @@
 -- ---------- 회원 ----------
 create table if not exists users (
   id            text primary key,
-  email         text unique not null,
-  nickname      text unique not null,
-  password      text not null,          -- 데모용 평문. 실제 서비스는 Supabase Auth 로 교체
+  login_id      text unique not null,   -- 로그인 아이디
+  name          text,                   -- 이름 (비공개)
+  nickname      text unique not null,   -- 화면에 보이는 이름 (가입 시 아이디로 정해진다)
+  phone         text,                   -- 연락처 (비공개)
+  birthday      text,                   -- 생년월일 YYYY-MM-DD (비공개)
+  email         text unique,            -- 예전 계정에만 남아 있다
+  password      text not null,          -- scrypt 해시 (lib/server/password.ts)
   avatar_color  text not null default '#6366f1',
   created_at    timestamptz not null default now()
 );
+create index if not exists users_login_id_idx on users (login_id);
 
 -- ---------- 커뮤니티 ----------
 create table if not exists communities (

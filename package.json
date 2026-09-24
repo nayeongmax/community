@@ -9,7 +9,8 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "seed": "node scripts/seed.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "admin": "node scripts/admin.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

@@ -10,6 +10,7 @@ import { colorFromString, slugify, uid } from '../utils';
 import { repo } from './repo';
 import { removeUpload, saveUpload } from './uploads';
 import { clearSession, currentUser, isSiteAdmin, setSession } from './session';
+import { hashPassword, isHashed, verifyPassword } from './password';
 
 export interface ActionState {
   error?: string;
@@ -22,33 +23,65 @@ const normalizeTags = (tags: string[]): string[] =>
 // ---------------- 로그인 ----------------
 
 export async function loginAction(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const email = String(form.get('email') ?? '').trim();
+  const loginId = String(form.get('loginId') ?? '').trim();
   const password = String(form.get('password') ?? '');
 
-  const user = await repo.getUserByEmail(email);
-  if (!user || user.password !== password) {
-    return { error: '이메일 또는 비밀번호가 올바르지 않습니다.' };
+  const user = await repo.getUserByLoginId(loginId);
+  // 아이디가 없을 때와 비밀번호가 틀렸을 때를 구분해서 알려 주지 않는다
+  if (!user || !user.password || !(await verifyPassword(password, user.password))) {
+    return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
   }
+
+  // 예전 평문 계정은 이번 로그인에 맞춰 해시로 올려 둔다
+  if (!isHashed(user.password)) {
+    await repo.updateUser(user.id, { password: await hashPassword(password) });
+  }
+
   await setSession(user.id);
   redirect('/');
 }
 
+/** 아이디 규칙 — 영문/숫자/밑줄 4~20자 */
+const ID_RULE = /^[a-zA-Z0-9_]{4,20}$/;
+/** 생년월일 YYYY-MM-DD */
+const BIRTHDAY_RULE = /^\d{4}-\d{2}-\d{2}$/;
+
 export async function signupAction(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const email = String(form.get('email') ?? '').trim();
-  const nickname = String(form.get('nickname') ?? '').trim();
+  const name = String(form.get('name') ?? '').trim();
+  const loginId = String(form.get('loginId') ?? '').trim();
   const password = String(form.get('password') ?? '');
+  const phone = String(form.get('phone') ?? '').replace(/[^0-9]/g, '');
+  const birthday = String(form.get('birthday') ?? '').trim();
 
-  if (!email || !nickname || !password) return { error: '모든 항목을 입력해 주세요.' };
+  if (!name || !loginId || !password || !phone || !birthday) {
+    return { error: '모든 항목을 입력해 주세요.' };
+  }
+  if (!ID_RULE.test(loginId)) {
+    return { error: '아이디는 영문·숫자·밑줄 4~20자로 지어 주세요.' };
+  }
+  if (password.length < 8) {
+    return { error: '비밀번호는 8자 이상으로 지어 주세요.' };
+  }
+  if (phone.length < 9 || phone.length > 11) {
+    return { error: '연락처를 다시 확인해 주세요.' };
+  }
+  if (!BIRTHDAY_RULE.test(birthday)) {
+    return { error: '생년월일을 선택해 주세요.' };
+  }
 
-  if (await repo.getUserByEmail(email)) return { error: '이미 가입된 이메일입니다.' };
-  if (await repo.getUserByNickname(nickname)) return { error: '이미 사용 중인 닉네임입니다.' };
+  if (await repo.getUserByLoginId(loginId)) return { error: '이미 사용 중인 아이디입니다.' };
+  if (await repo.getUserByNickname(loginId)) return { error: '이미 사용 중인 아이디입니다.' };
 
   const user: User = {
     id: uid('u_'),
-    email,
-    nickname,
-    password,
-    avatarColor: colorFromString(nickname),
+    loginId,
+    name,
+    // 글·댓글에 보이는 이름. 이름·연락처·생년월일은 공개하지 않는다.
+    nickname: loginId,
+    phone,
+    birthday,
+    password: await hashPassword(password),
+    avatarColor: colorFromString(loginId),
     createdAt: new Date().toISOString(),
   };
   await repo.createUser(user);
