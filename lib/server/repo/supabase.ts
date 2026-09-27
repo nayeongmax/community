@@ -254,7 +254,9 @@ const fromAnonComment = (c: AnonComment): Row => ({
 const toAd = (r: Row): AdBanner => ({
   id: r.id as string,
   title: r.title as string,
-  image: r.image as string,
+  size: ((r.size as string) === 'wide' ? 'wide' : 'card') as AdBanner['size'],
+  image: (r.image as string) ?? '',
+  embed: (r.embed as string) ?? undefined,
   link: (r.link as string) ?? undefined,
   active: r.active as boolean,
   createdAt: r.created_at as string,
@@ -497,7 +499,9 @@ export const supabaseRepo: Repo = {
     await supabase().from('ad_banners').insert({
       id: ad.id,
       title: ad.title,
+      size: ad.size,
       image: ad.image,
+      embed: ad.embed ?? null,
       link: ad.link ?? null,
       active: ad.active,
       sort_order: order,
@@ -507,7 +511,9 @@ export const supabaseRepo: Repo = {
   async updateAd(id, patch) {
     const row: Row = {};
     if (patch.title !== undefined) row.title = patch.title;
+    if (patch.size !== undefined) row.size = patch.size;
     if (patch.image !== undefined) row.image = patch.image;
+    if (patch.embed !== undefined) row.embed = patch.embed ?? null;
     if (patch.link !== undefined) row.link = patch.link ?? null;
     if (patch.active !== undefined) row.active = patch.active;
     if (patch.order !== undefined) row.sort_order = patch.order;

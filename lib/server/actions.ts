@@ -443,17 +443,46 @@ export async function createBannerAction(
   _prev: ActionState,
   form: FormData
 ): Promise<ActionState> {
+  if (!(await requireSiteAdmin())) return { error: '광고 배너는 운영자만 등록할 수 있습니다.' };
+
+  const { isAllowedEmbed, toEmbedUrl } = await import('./ads-types');
+
   const title = String(form.get('title') ?? '').trim();
+  const size = String(form.get('size') ?? 'wide') === 'card' ? 'card' : 'wide';
   const image = String(form.get('image') ?? '');
   const link = String(form.get('link') ?? '').trim() || undefined;
+  const embedInput = String(form.get('embed') ?? '').trim();
 
-  if (!(await requireSiteAdmin())) return { error: '광고 배너는 운영자만 등록할 수 있습니다.' };
   if (!title) return { error: '배너 이름을 입력해 주세요.' };
-  if (!image) return { error: '이미지를 올려 주세요.' };
+
+  // 제휴 배너(쿠팡 파트너스 등) — 붙여넣은 코드에서 주소만 뽑아 쓴다
+  let embed: string | undefined;
+  if (embedInput) {
+    const url = toEmbedUrl(embedInput);
+    if (!url) {
+      return {
+        error:
+          '이 제휴 코드는 아직 넣을 수 없습니다. 쿠팡 파트너스 배너 코드를 그대로 붙여넣거나, https 로 시작하는 배너 주소를 넣어 주세요.',
+      };
+    }
+    if (!isAllowedEmbed(url)) return { error: '허용되지 않은 제휴사 주소입니다.' };
+    embed = url;
+  }
+
+  if (!embed && !image) return { error: '이미지를 올리거나 제휴 코드를 넣어 주세요.' };
+
+  if (link) {
+    try {
+      const u = new URL(link);
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new Error();
+    } catch {
+      return { error: '연결 주소는 https:// 로 시작해야 합니다.' };
+    }
+  }
 
   const { newBanner } = await import('./ads');
   const list = await repo.listAds();
-  await repo.createAd(newBanner({ title, image, link }), list.length);
+  await repo.createAd(newBanner({ title, size, image: embed ? '' : image, embed, link }), list.length);
 
   revalidatePath('/');
   revalidatePath('/community');

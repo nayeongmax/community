@@ -140,10 +140,12 @@ create index if not exists anon_comments_post_idx on anon_comments (post_id, cre
 create table if not exists ad_banners (
   id            text primary key,
   title         text not null,
-  image         text not null,          -- Storage 주소
+  size          text not null default 'card',  -- wide(한 줄 전체) / card(한 줄에 2개)
+  image         text not null default '',      -- Storage 주소
+  embed         text,                          -- 제휴 배너 주소 (쿠팡 파트너스 등 iframe)
   link          text,
   active        boolean not null default true,
-  sort_order    int not null default 0, -- 노출 순서
+  sort_order    int not null default 0,        -- 노출 순서
   created_at    timestamptz not null default now()
 );
 create index if not exists ad_banners_order_idx on ad_banners (sort_order);
