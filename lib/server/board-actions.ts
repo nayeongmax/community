@@ -58,7 +58,7 @@ export async function createAnonPostAction(
 
   await repo.createAnonPost(post);
 
-  revalidatePath('/games');
+  revalidatePath('/');
   return { ok: true };
 }
 
@@ -88,7 +88,7 @@ export async function createAnonCommentAction(
 
   await repo.createAnonComment(comment);
 
-  revalidatePath('/games');
+  revalidatePath('/');
   return { ok: true };
 }
 
@@ -103,7 +103,7 @@ export async function toggleAnonLikeAction(postId: string): Promise<void> {
   else likedBy.push(key);
 
   await repo.updateAnonPost(postId, { likedBy });
-  revalidatePath('/games');
+  revalidatePath('/');
 }
 
 export async function viewAnonPostAction(postId: string): Promise<void> {
@@ -125,7 +125,7 @@ export async function deleteAnonPostAction(
   }
   await repo.deleteAnonPost(postId);
 
-  revalidatePath('/games');
+  revalidatePath('/');
   return { ok: true };
 }
 
@@ -142,6 +142,6 @@ export async function deleteAnonCommentAction(
   }
   await repo.deleteAnonComment(commentId);
 
-  revalidatePath('/games');
+  revalidatePath('/');
   return { ok: true };
 }

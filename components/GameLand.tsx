@@ -112,14 +112,14 @@ export default function GameLand({
       <div className="relative z-10">
         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#080a1c]/80 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-            <Link href="/games" className="flex items-center gap-2 font-black shrink-0">
+            <Link href="/" className="flex items-center gap-2 font-black shrink-0">
               <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-slate-900 grid place-items-center">
                 🎮
               </span>
               <span className="text-white">게임 랜드</span>
             </Link>
             <nav className="ml-auto flex items-center gap-1 text-sm">
-              <Link href="/" className="px-3 py-1.5 rounded-lg text-slate-300 hover:bg-white/10">
+              <Link href="/community" className="px-3 py-1.5 rounded-lg text-slate-300 hover:bg-white/10">
                 커뮤니티
               </Link>
               <Link href="/ranking" className="px-3 py-1.5 rounded-lg text-slate-300 hover:bg-white/10">

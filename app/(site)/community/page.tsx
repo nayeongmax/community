@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { getHomeData, sortFeed, FeedSort, PostDetail, SiteStats } from '../../lib/server/queries';
-import { listActiveAds } from '../../lib/server/ads';
-import { isSiteAdmin } from '../../lib/server/session';
-import { site } from '../../lib/site';
-import AdSlots from '../../components/AdSlots';
-import CommunityAvatar from '../../components/CommunityAvatar';
-import { formatCount, timeAgo } from '../../lib/utils';
+import { getHomeData, sortFeed, FeedSort, PostDetail, SiteStats } from '../../../lib/server/queries';
+import { listActiveAds } from '../../../lib/server/ads';
+import { isSiteAdmin } from '../../../lib/server/session';
+import { site } from '../../../lib/site';
+import AdSlots from '../../../components/AdSlots';
+import CommunityAvatar from '../../../components/CommunityAvatar';
+import { formatCount, timeAgo } from '../../../lib/utils';
 
 const SORT_TABS: [FeedSort, string][] = [
   ['hot', '인기'],
@@ -16,6 +16,12 @@ const SORT_TABS: [FeedSort, string][] = [
 
 const isSort = (v?: string): v is FeedSort =>
   v === 'hot' || v === 'new' || v === 'comments' || v === 'top';
+
+export const metadata = {
+  title: '커뮤니티',
+  description: site.description,
+  alternates: { canonical: '/community' },
+};
 
 /** 통합 피드의 글 한 줄 (어느 커뮤니티에서 왔는지 함께 표시) */
 function FeedRow({ p }: { p: PostDetail }) {
@@ -76,7 +82,7 @@ function StatBar({ stats }: { stats: SiteStats }) {
 }
 
 /** 홈 — 서버에서 글 목록까지 그려 검색로봇이 글을 따라 들어갈 수 있게 한다 */
-export default async function HomePage({
+export default async function CommunityHomePage({
   searchParams,
 }: {
   searchParams: Promise<{ sort?: string; tag?: string }>;
@@ -105,7 +111,7 @@ export default async function HomePage({
     if (s !== 'hot') q.set('sort', s);
     if (t) q.set('tag', t);
     const qs = q.toString();
-    return qs ? `/?${qs}` : '/';
+    return qs ? `/community?${qs}` : '/community';
   };
 
   return (
@@ -115,9 +121,9 @@ export default async function HomePage({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: site.name,
-            url: site.url,
+            '@type': 'CollectionPage',
+            name: `${site.name} 커뮤니티`,
+            url: `${site.url}/community`,
             description: site.description,
           }),
         }}
@@ -142,7 +148,7 @@ export default async function HomePage({
 
       {!tag && (
         <Link
-          href="/games"
+          href="/"
           className="flex items-center gap-3 rounded-2xl bg-ink px-4 py-3.5 mb-4 hover:bg-ink-soft"
         >
           <span className="w-9 h-9 rounded-lg bg-white/10 grid place-items-center text-lg shrink-0">

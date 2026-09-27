@@ -14,10 +14,10 @@ interface Item {
 }
 
 const FEED: Item[] = [
-  { icon: 'home', label: '홈', href: '/', match: (p) => p === '/' },
+  { icon: 'home', label: '커뮤니티 홈', href: '/community', match: (p) => p === '/community' },
   { icon: 'search', label: '탐색', href: '/explore', match: (p) => p.startsWith('/explore') },
   { icon: 'bookmark', label: '구독', href: '/me', match: (p) => p.startsWith('/me') },
-  { icon: 'game', label: '게임 랜드', href: '/games', match: (p) => p.startsWith('/games') },
+  { icon: 'game', label: '게임 랜드', href: '/', match: (p) => p === '/' },
   { icon: 'chat', label: '채팅', href: '#', match: () => false, soon: true },
 ];
 

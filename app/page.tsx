@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
-import type { BoardCategory, BoardSort } from '../../lib/board-types';
-import { listAnonComments, listAnonPosts, myBoardContribution } from '../../lib/server/board';
-import { currentUser, isSiteAdmin } from '../../lib/server/session';
-import { listActiveAds } from '../../lib/server/ads';
-import AdSlots from '../../components/AdSlots';
-import GameLand from '../../components/GameLand';
+import type { BoardCategory, BoardSort } from '../lib/board-types';
+import { listAnonComments, listAnonPosts, myBoardContribution } from '../lib/server/board';
+import { currentUser, isSiteAdmin } from '../lib/server/session';
+import { listActiveAds } from '../lib/server/ads';
+import AdSlots from '../components/AdSlots';
+import GameLand from '../components/GameLand';
 
 export const metadata: Metadata = {
-  title: '게임 랜드',
+  // 메인 페이지라 사이트 이름을 그대로 쓴다 (루트 레이아웃의 title.default)
   description: '미니게임 12종을 즐기고 익명 게시판에서 수다 떨면 내 랜드가 자랍니다.',
-  alternates: { canonical: '/games' },
+  alternates: { canonical: '/' },
 };
 
 export const dynamic = 'force-dynamic';
 
-export default async function GamesPage({
+export default async function HomePage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string; sort?: string }>;

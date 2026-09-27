@@ -13,7 +13,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     <div className="min-h-screen flex flex-col">
         <header className="bg-white border-b border-hair sticky top-0 z-30">
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 font-black text-lg shrink-0">
+            <Link href="/community" className="flex items-center gap-2 font-black text-lg shrink-0">
               <span className="w-8 h-8 rounded-lg bg-ink text-white grid place-items-center text-sm">
                 C
               </span>
@@ -70,7 +70,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <footer className="border-t border-hair bg-white py-7 text-center text-xs text-ink-faint">
           <p>누구나 만드는 오픈 커뮤니티 플랫폼</p>
           <p className="mt-2 flex items-center justify-center gap-3">
-            <Link href="/games" className="hover:text-ink-mute">
+            <Link href="/" className="hover:text-ink-mute">
               게임 랜드
             </Link>
             {admin && (

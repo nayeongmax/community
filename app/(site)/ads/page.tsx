@@ -23,7 +23,7 @@ export default async function AdsPage() {
           지금 <b className="text-ink">{me.loginId}</b> 아이디로 로그인되어 있습니다.
         </p>
         <Link
-          href="/"
+          href="/community"
           className="inline-block mt-6 bg-ink text-white font-bold text-sm px-5 py-2.5 rounded-lg hover:bg-ink-soft"
         >
           홈으로
@@ -40,19 +40,19 @@ export default async function AdsPage() {
         <p className="text-[11px] font-bold tracking-[0.18em] text-ink-faint">ADS</p>
         <h1 className="text-2xl font-black text-ink mt-1">광고 배너 관리</h1>
         <p className="text-sm text-ink-mute mt-1">
-          홈과 게임 랜드에 한 줄에 2개씩 노출됩니다. 목록 순서가 곧 노출 순서예요.
+          메인(게임 랜드)과 커뮤니티 홈에 한 줄에 2개씩 노출됩니다. 목록 순서가 곧 노출 순서예요.
         </p>
       </div>
 
       <AdManager banners={banners} />
 
       <p className="text-xs text-ink-faint">
-        <Link href="/" className="font-semibold text-ink-mute hover:text-ink">
-          홈에서 확인하기 →
+        <Link href="/community" className="font-semibold text-ink-mute hover:text-ink">
+          커뮤니티 홈에서 확인하기 →
         </Link>
         {'  '}
-        <Link href="/games" className="font-semibold text-ink-mute hover:text-ink ml-3">
-          게임 랜드에서 확인하기 →
+        <Link href="/" className="font-semibold text-ink-mute hover:text-ink ml-3">
+          메인(게임 랜드)에서 확인하기 →
         </Link>
       </p>
     </div>

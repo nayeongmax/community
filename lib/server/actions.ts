@@ -173,7 +173,7 @@ export async function createCommunityAction(
 
   await repo.createCommunity(community, boards, membership);
 
-  revalidatePath('/');
+  revalidatePath('/community');
   redirect(`/c/${slug}`);
 }
 
@@ -327,7 +327,7 @@ export async function writePostAction(_prev: ActionState, form: FormData): Promi
   await repo.createPost(newPost);
 
   revalidatePath(`/c/${slug}`);
-  revalidatePath('/');
+  revalidatePath('/community');
   redirect(`/c/${slug}/post/${newPost.id}`);
 }
 
@@ -346,7 +346,7 @@ export async function deletePostAction(postId: string, slug: string): Promise<vo
   await repo.deletePost(postId);
 
   revalidatePath(`/c/${slug}`);
-  revalidatePath('/');
+  revalidatePath('/community');
   redirect(`/c/${slug}`);
 }
 
@@ -456,7 +456,7 @@ export async function createBannerAction(
   await repo.createAd(newBanner({ title, image, link }), list.length);
 
   revalidatePath('/');
-  revalidatePath('/games');
+  revalidatePath('/community');
   revalidatePath('/ads');
   return { ok: true };
 }
@@ -470,7 +470,7 @@ export async function moveBannerAction(id: string, dir: -1 | 1): Promise<void> {
   [list[i], list[j]] = [list[j], list[i]];
   await repo.reorderAds(list.map((b) => b.id));
   revalidatePath('/');
-  revalidatePath('/games');
+  revalidatePath('/community');
   revalidatePath('/ads');
 }
 
@@ -480,7 +480,7 @@ export async function toggleBannerAction(id: string): Promise<void> {
   const b = list.find((x) => x.id === id);
   if (b) await repo.updateAd(id, { active: !b.active });
   revalidatePath('/');
-  revalidatePath('/games');
+  revalidatePath('/community');
   revalidatePath('/ads');
 }
 
@@ -491,6 +491,6 @@ export async function deleteBannerAction(id: string): Promise<void> {
   if (target) await removeUpload(target.image);
   await repo.deleteAd(id);
   revalidatePath('/');
-  revalidatePath('/games');
+  revalidatePath('/community');
   revalidatePath('/ads');
 }
