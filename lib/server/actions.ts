@@ -9,7 +9,8 @@ import { Attachment, Board, Comment, Community, Membership, Post, User } from '.
 import { colorFromString, slugify, uid } from '../utils';
 import { repo } from './repo';
 import { removeUpload, saveUpload } from './uploads';
-import { clearSession, currentUser, setSession } from './session';
+import { clearSession, currentUser, isSiteAdmin, setSession } from './session';
+import { hashPassword, isHashed, verifyPassword } from './password';
 
 export interface ActionState {
   error?: string;
@@ -22,33 +23,65 @@ const normalizeTags = (tags: string[]): string[] =>
 // ---------------- 로그인 ----------------
 
 export async function loginAction(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const email = String(form.get('email') ?? '').trim();
+  const loginId = String(form.get('loginId') ?? '').trim();
   const password = String(form.get('password') ?? '');
 
-  const user = await repo.getUserByEmail(email);
-  if (!user || user.password !== password) {
-    return { error: '이메일 또는 비밀번호가 올바르지 않습니다.' };
+  const user = await repo.getUserByLoginId(loginId);
+  // 아이디가 없을 때와 비밀번호가 틀렸을 때를 구분해서 알려 주지 않는다
+  if (!user || !user.password || !(await verifyPassword(password, user.password))) {
+    return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
   }
+
+  // 예전 평문 계정은 이번 로그인에 맞춰 해시로 올려 둔다
+  if (!isHashed(user.password)) {
+    await repo.updateUser(user.id, { password: await hashPassword(password) });
+  }
+
   await setSession(user.id);
   redirect('/');
 }
 
+/** 아이디 규칙 — 영문/숫자/밑줄 4~20자 */
+const ID_RULE = /^[a-zA-Z0-9_]{4,20}$/;
+/** 생년월일 YYYY-MM-DD */
+const BIRTHDAY_RULE = /^\d{4}-\d{2}-\d{2}$/;
+
 export async function signupAction(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const email = String(form.get('email') ?? '').trim();
-  const nickname = String(form.get('nickname') ?? '').trim();
+  const name = String(form.get('name') ?? '').trim();
+  const loginId = String(form.get('loginId') ?? '').trim();
   const password = String(form.get('password') ?? '');
+  const phone = String(form.get('phone') ?? '').replace(/[^0-9]/g, '');
+  const birthday = String(form.get('birthday') ?? '').trim();
 
-  if (!email || !nickname || !password) return { error: '모든 항목을 입력해 주세요.' };
+  if (!name || !loginId || !password || !phone || !birthday) {
+    return { error: '모든 항목을 입력해 주세요.' };
+  }
+  if (!ID_RULE.test(loginId)) {
+    return { error: '아이디는 영문·숫자·밑줄 4~20자로 지어 주세요.' };
+  }
+  if (password.length < 8) {
+    return { error: '비밀번호는 8자 이상으로 지어 주세요.' };
+  }
+  if (phone.length < 9 || phone.length > 11) {
+    return { error: '연락처를 다시 확인해 주세요.' };
+  }
+  if (!BIRTHDAY_RULE.test(birthday)) {
+    return { error: '생년월일을 선택해 주세요.' };
+  }
 
-  if (await repo.getUserByEmail(email)) return { error: '이미 가입된 이메일입니다.' };
-  if (await repo.getUserByNickname(nickname)) return { error: '이미 사용 중인 닉네임입니다.' };
+  if (await repo.getUserByLoginId(loginId)) return { error: '이미 사용 중인 아이디입니다.' };
+  if (await repo.getUserByNickname(loginId)) return { error: '이미 사용 중인 아이디입니다.' };
 
   const user: User = {
     id: uid('u_'),
-    email,
-    nickname,
-    password,
-    avatarColor: colorFromString(nickname),
+    loginId,
+    name,
+    // 글·댓글에 보이는 이름. 이름·연락처·생년월일은 공개하지 않는다.
+    nickname: loginId,
+    phone,
+    birthday,
+    password: await hashPassword(password),
+    avatarColor: colorFromString(loginId),
     createdAt: new Date().toISOString(),
   };
   await repo.createUser(user);
@@ -140,7 +173,7 @@ export async function createCommunityAction(
 
   await repo.createCommunity(community, boards, membership);
 
-  revalidatePath('/');
+  revalidatePath('/community');
   redirect(`/c/${slug}`);
 }
 
@@ -294,7 +327,7 @@ export async function writePostAction(_prev: ActionState, form: FormData): Promi
   await repo.createPost(newPost);
 
   revalidatePath(`/c/${slug}`);
-  revalidatePath('/');
+  revalidatePath('/community');
   redirect(`/c/${slug}/post/${newPost.id}`);
 }
 
@@ -313,7 +346,7 @@ export async function deletePostAction(postId: string, slug: string): Promise<vo
   await repo.deletePost(postId);
 
   revalidatePath(`/c/${slug}`);
-  revalidatePath('/');
+  revalidatePath('/community');
   redirect(`/c/${slug}`);
 }
 
@@ -396,28 +429,69 @@ export async function deleteCommentAction(
 }
 
 // ---------------- 광고 배너 ----------------
+//
+// 배너는 사이트 전체에 보이고 수익과 직결되므로 사이트 운영자만 다룰 수 있다.
+// 화면에서 버튼을 숨기는 것만으로는 부족해서, 동작마다 여기서 다시 확인한다.
+
+/** 운영자가 아니면 막는다 */
+async function requireSiteAdmin(): Promise<boolean> {
+  return isSiteAdmin();
+}
+
 
 export async function createBannerAction(
   _prev: ActionState,
   form: FormData
 ): Promise<ActionState> {
+  if (!(await requireSiteAdmin())) return { error: '광고 배너는 운영자만 등록할 수 있습니다.' };
+
+  const { isAllowedEmbed, toEmbedUrl } = await import('./ads-types');
+
   const title = String(form.get('title') ?? '').trim();
+  const size = String(form.get('size') ?? 'wide') === 'card' ? 'card' : 'wide';
   const image = String(form.get('image') ?? '');
   const link = String(form.get('link') ?? '').trim() || undefined;
+  const embedInput = String(form.get('embed') ?? '').trim();
 
   if (!title) return { error: '배너 이름을 입력해 주세요.' };
-  if (!image) return { error: '이미지를 올려 주세요.' };
+
+  // 제휴 배너(쿠팡 파트너스 등) — 붙여넣은 코드에서 주소만 뽑아 쓴다
+  let embed: string | undefined;
+  if (embedInput) {
+    const url = toEmbedUrl(embedInput);
+    if (!url) {
+      return {
+        error:
+          '이 제휴 코드는 아직 넣을 수 없습니다. 쿠팡 파트너스 배너 코드를 그대로 붙여넣거나, https 로 시작하는 배너 주소를 넣어 주세요.',
+      };
+    }
+    if (!isAllowedEmbed(url)) return { error: '허용되지 않은 제휴사 주소입니다.' };
+    embed = url;
+  }
+
+  if (!embed && !image) return { error: '이미지를 올리거나 제휴 코드를 넣어 주세요.' };
+
+  if (link) {
+    try {
+      const u = new URL(link);
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new Error();
+    } catch {
+      return { error: '연결 주소는 https:// 로 시작해야 합니다.' };
+    }
+  }
 
   const { newBanner } = await import('./ads');
   const list = await repo.listAds();
-  await repo.createAd(newBanner({ title, image, link }), list.length);
+  await repo.createAd(newBanner({ title, size, image: embed ? '' : image, embed, link }), list.length);
 
   revalidatePath('/');
+  revalidatePath('/community');
   revalidatePath('/ads');
   return { ok: true };
 }
 
 export async function moveBannerAction(id: string, dir: -1 | 1): Promise<void> {
+  if (!(await requireSiteAdmin())) return;
   const list = await repo.listAds();
   const i = list.findIndex((b) => b.id === id);
   const j = i + dir;
@@ -425,22 +499,27 @@ export async function moveBannerAction(id: string, dir: -1 | 1): Promise<void> {
   [list[i], list[j]] = [list[j], list[i]];
   await repo.reorderAds(list.map((b) => b.id));
   revalidatePath('/');
+  revalidatePath('/community');
   revalidatePath('/ads');
 }
 
 export async function toggleBannerAction(id: string): Promise<void> {
+  if (!(await requireSiteAdmin())) return;
   const list = await repo.listAds();
   const b = list.find((x) => x.id === id);
   if (b) await repo.updateAd(id, { active: !b.active });
   revalidatePath('/');
+  revalidatePath('/community');
   revalidatePath('/ads');
 }
 
 export async function deleteBannerAction(id: string): Promise<void> {
+  if (!(await requireSiteAdmin())) return;
   const list = await repo.listAds();
   const target = list.find((b) => b.id === id);
   if (target) await removeUpload(target.image);
   await repo.deleteAd(id);
   revalidatePath('/');
+  revalidatePath('/community');
   revalidatePath('/ads');
 }

@@ -103,9 +103,10 @@ export const fileRepo: Repo = {
   async getUserById(id) {
     return (await readMain()).users.find((u) => u.id === id) ?? null;
   },
-  async getUserByEmail(email) {
+  async getUserByLoginId(loginId) {
+    const want = loginId.toLowerCase();
     return (
-      (await readMain()).users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null
+      (await readMain()).users.find((u) => (u.loginId ?? '').toLowerCase() === want) ?? null
     );
   },
   async getUserByNickname(nickname) {
@@ -113,6 +114,13 @@ export const fileRepo: Repo = {
   },
   async createUser(user) {
     (await readMain()).users.push(user);
+    await saveMain();
+  },
+  async updateUser(id, patch) {
+    const db = await readMain();
+    const i = db.users.findIndex((u) => u.id === id);
+    if (i < 0) return;
+    db.users[i] = { ...db.users[i], ...patch };
     await saveMain();
   },
   async listUsersByIds(ids) {

@@ -7,12 +7,22 @@ export type CommunityKind = 'normal' | 'fan' | 'featured';
 
 export interface User {
   id: string;
-  email: string;
+  /** 로그인 아이디 — 이걸로 로그인한다 */
+  loginId: string;
+  /** 이름 (본인 확인용 · 화면에 공개하지 않는다) */
+  name: string;
+  /** 화면에 보이는 이름. 가입할 때 아이디로 정해진다 */
   nickname: string;
+  /** 연락처 (비공개) */
+  phone?: string;
+  /** 생년월일 YYYY-MM-DD (비공개) */
+  birthday?: string;
+  /** 이메일 — 예전 계정에만 남아 있다 */
+  email?: string;
   /** 아바타 배경색 (해시로 생성) */
   avatarColor: string;
   createdAt: string;
-  /** 데모(localStorage) 모드에서만 사용. 실제 서비스는 Supabase Auth 사용 */
+  /** 해시된 비밀번호 (lib/server/password.ts) */
   password?: string;
 }
 

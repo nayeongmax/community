@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { getHomeData, sortFeed, FeedSort, PostDetail, SiteStats } from '../../lib/server/queries';
-import { listActiveAds } from '../../lib/server/ads';
-import { BANNER_RATIO } from '../../lib/server/ads-types';
-import { site } from '../../lib/site';
-import CommunityAvatar from '../../components/CommunityAvatar';
-import { formatCount, timeAgo } from '../../lib/utils';
+import { getHomeData, sortFeed, FeedSort, PostDetail, SiteStats } from '../../../lib/server/queries';
+import { listActiveAds } from '../../../lib/server/ads';
+import { isSiteAdmin } from '../../../lib/server/session';
+import { site } from '../../../lib/site';
+import AdSlots from '../../../components/AdSlots';
+import CommunityAvatar from '../../../components/CommunityAvatar';
+import { formatCount, timeAgo } from '../../../lib/utils';
 
 const SORT_TABS: [FeedSort, string][] = [
   ['hot', '인기'],
@@ -15,6 +16,12 @@ const SORT_TABS: [FeedSort, string][] = [
 
 const isSort = (v?: string): v is FeedSort =>
   v === 'hot' || v === 'new' || v === 'comments' || v === 'top';
+
+export const metadata = {
+  title: '커뮤니티',
+  description: site.description,
+  alternates: { canonical: '/community' },
+};
 
 /** 통합 피드의 글 한 줄 (어느 커뮤니티에서 왔는지 함께 표시) */
 function FeedRow({ p }: { p: PostDetail }) {
@@ -75,7 +82,7 @@ function StatBar({ stats }: { stats: SiteStats }) {
 }
 
 /** 홈 — 서버에서 글 목록까지 그려 검색로봇이 글을 따라 들어갈 수 있게 한다 */
-export default async function HomePage({
+export default async function CommunityHomePage({
   searchParams,
 }: {
   searchParams: Promise<{ sort?: string; tag?: string }>;
@@ -84,9 +91,10 @@ export default async function HomePage({
   const sort: FeedSort = isSort(sp.sort) ? sp.sort : 'hot';
   const tag = sp.tag ?? '';
 
-  const [{ posts, communities, trending, tags, stats }, ads] = await Promise.all([
+  const [{ posts, communities, trending, tags, stats }, ads, admin] = await Promise.all([
     getHomeData(),
     listActiveAds(),
+    isSiteAdmin(),
   ]);
 
   const feed = sortFeed(tag ? posts.filter((p) => p.tags.includes(tag)) : posts, sort).slice(0, 40);
@@ -103,7 +111,7 @@ export default async function HomePage({
     if (s !== 'hot') q.set('sort', s);
     if (t) q.set('tag', t);
     const qs = q.toString();
-    return qs ? `/?${qs}` : '/';
+    return qs ? `/community?${qs}` : '/community';
   };
 
   return (
@@ -113,9 +121,9 @@ export default async function HomePage({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: site.name,
-            url: site.url,
+            '@type': 'CollectionPage',
+            name: `${site.name} 커뮤니티`,
+            url: `${site.url}/community`,
             description: site.description,
           }),
         }}
@@ -140,7 +148,7 @@ export default async function HomePage({
 
       {!tag && (
         <Link
-          href="/games"
+          href="/"
           className="flex items-center gap-3 rounded-2xl bg-ink px-4 py-3.5 mb-4 hover:bg-ink-soft"
         >
           <span className="w-9 h-9 rounded-lg bg-white/10 grid place-items-center text-lg shrink-0">
@@ -203,52 +211,7 @@ export default async function HomePage({
         </section>
       )}
 
-      {!tag && ads.length > 0 && (
-        <section className="mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[11px] font-bold tracking-[0.14em] text-ink-faint">광고</h2>
-            <Link href="/ads" className="text-xs font-semibold text-ink-mute hover:text-ink">
-              배너 관리 →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {ads.map((b) => {
-              const inner = (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={b.image}
-                    alt={b.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                    style={{ aspectRatio: BANNER_RATIO }}
-                  />
-                  <span className="absolute top-2 left-2 text-[10px] font-bold bg-black/55 text-white px-1.5 py-0.5 rounded">
-                    AD
-                  </span>
-                </>
-              );
-              const cls =
-                'relative block overflow-hidden rounded-xl border border-hair bg-white hover:border-ink/25';
-              return b.link ? (
-                <a
-                  key={b.id}
-                  href={b.link}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className={cls}
-                >
-                  {inner}
-                </a>
-              ) : (
-                <div key={b.id} className={cls}>
-                  {inner}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {!tag && <AdSlots ads={ads} isAdmin={admin} className="mb-5" />}
 
       {/* 태그 필터 */}
       {tags.length > 0 && (

@@ -10,18 +10,21 @@ export function seedDB(db: DB): DB {
   const now = Date.now();
   const iso = (offsetMin: number) => new Date(now - offsetMin * 60000).toISOString();
 
-  const mkUser = (nickname: string, email: string): User => ({
+  // 둘러보기용 계정. 비밀번호는 여기서 정하지 않는다 —
+  // 진짜 계정은 scripts/admin.mjs 로 따로 만든다.
+  const mkUser = (loginId: string, name: string, nickname: string): User => ({
     id: uid('u_'),
-    email,
+    loginId,
+    name,
     nickname,
-    password: '1234',
+    password: '',
     avatarColor: colorFromString(nickname),
     createdAt: iso(60 * 24 * 30),
   });
 
-  const admin = mkUser('운영자', 'admin@demo.com');
-  const gamja = mkUser('감자도리', 'gamja@demo.com');
-  const bung = mkUser('붕어빵', 'bung@demo.com');
+  const admin = mkUser('admin', '운영자', '운영자');
+  const gamja = mkUser('gamja', '감자도리', '감자도리');
+  const bung = mkUser('bung', '붕어빵', '붕어빵');
   db.users.push(admin, gamja, bung);
 
   interface SeedCommunity {

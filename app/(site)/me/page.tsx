@@ -28,7 +28,7 @@ export default async function MyPage() {
         </span>
         <div>
           <h1 className="text-xl font-black text-ink">{me.nickname}</h1>
-          <p className="text-sm text-ink-mute">{me.email}</p>
+          <p className="text-sm text-ink-mute">@{me.loginId}</p>
           <p className="text-xs text-ink-faint mt-1 tabular-nums">
             가입한 커뮤니티 {mine.length} · 쓴 글 {myPosts.length}
           </p>

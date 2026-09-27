@@ -18,12 +18,17 @@
 -- ---------- 회원 ----------
 create table if not exists users (
   id            text primary key,
-  email         text unique not null,
-  nickname      text unique not null,
-  password      text not null,          -- 데모용 평문. 실제 서비스는 Supabase Auth 로 교체
+  login_id      text unique not null,   -- 로그인 아이디
+  name          text,                   -- 이름 (비공개)
+  nickname      text unique not null,   -- 화면에 보이는 이름 (가입 시 아이디로 정해진다)
+  phone         text,                   -- 연락처 (비공개)
+  birthday      text,                   -- 생년월일 YYYY-MM-DD (비공개)
+  email         text unique,            -- 예전 계정에만 남아 있다
+  password      text not null,          -- scrypt 해시 (lib/server/password.ts)
   avatar_color  text not null default '#6366f1',
   created_at    timestamptz not null default now()
 );
+create index if not exists users_login_id_idx on users (login_id);
 
 -- ---------- 커뮤니티 ----------
 create table if not exists communities (
@@ -135,10 +140,12 @@ create index if not exists anon_comments_post_idx on anon_comments (post_id, cre
 create table if not exists ad_banners (
   id            text primary key,
   title         text not null,
-  image         text not null,          -- Storage 주소
+  size          text not null default 'card',  -- wide(한 줄 전체) / card(한 줄에 2개)
+  image         text not null default '',      -- Storage 주소
+  embed         text,                          -- 제휴 배너 주소 (쿠팡 파트너스 등 iframe)
   link          text,
   active        boolean not null default true,
-  sort_order    int not null default 0, -- 노출 순서
+  sort_order    int not null default 0,        -- 노출 순서
   created_at    timestamptz not null default now()
 );
 create index if not exists ad_banners_order_idx on ad_banners (sort_order);

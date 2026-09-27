@@ -4,11 +4,11 @@
 // 실제 저장은 lib/server/repo 가 맡는다 (파일 또는 Supabase).
 
 import { uid } from '../utils';
-import type { AdBanner } from './ads-types';
+import type { AdBanner, BannerSize } from './ads-types';
 import { repo } from './repo';
 
-export type { AdBanner } from './ads-types';
-export { BANNER_RATIO } from './ads-types';
+export type { AdBanner, BannerSize } from './ads-types';
+export { BANNER_RATIO, BANNER_HINT } from './ads-types';
 
 export async function readAds(): Promise<AdBanner[]> {
   return repo.listAds();
@@ -18,11 +18,19 @@ export async function listActiveAds(): Promise<AdBanner[]> {
   return (await repo.listAds()).filter((b) => b.active);
 }
 
-export function newBanner(input: { title: string; image: string; link?: string }): AdBanner {
+export function newBanner(input: {
+  title: string;
+  size: BannerSize;
+  image?: string;
+  embed?: string;
+  link?: string;
+}): AdBanner {
   return {
     id: uid('ad_'),
     title: input.title,
-    image: input.image,
+    size: input.size,
+    image: input.image ?? '',
+    embed: input.embed,
     link: input.link,
     active: true,
     createdAt: new Date().toISOString(),

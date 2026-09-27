@@ -14,8 +14,9 @@ import { Board, Comment, Community, Membership, Post, User } from '../../types';
 export interface Repo {
   // 회원
   getUserById(id: string): Promise<User | null>;
-  getUserByEmail(email: string): Promise<User | null>;
+  getUserByLoginId(loginId: string): Promise<User | null>;
   getUserByNickname(nickname: string): Promise<User | null>;
+  updateUser(id: string, patch: Partial<User>): Promise<void>;
   createUser(user: User): Promise<void>;
   listUsersByIds(ids: string[]): Promise<User[]>;
 

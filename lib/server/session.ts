@@ -45,3 +45,27 @@ export async function myRole(
 export function isManager(role: string | null): boolean {
   return role === 'owner' || role === 'admin';
 }
+
+/**
+ * 사이트 운영자
+ *
+ * 커뮤니티 안에서의 '관리자'(owner/admin)와는 다르다. 이쪽은 사이트 전체를
+ * 운영하는 사람으로, 지금은 광고 배너를 다룰 수 있다.
+ *
+ * 누구인지는 로그인 아이디로 정한다. 쉼표로 여러 명을 넣을 수 있다.
+ *   SITE_ADMIN_ID=admin,partner
+ * 설정하지 않으면 아이디 'admin' 이 운영자다.
+ */
+export function siteAdminIds(): string[] {
+  const raw = process.env.SITE_ADMIN_ID ?? 'admin';
+  return raw
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** 지금 보고 있는 사람이 사이트 운영자인가 */
+export async function isSiteAdmin(): Promise<boolean> {
+  const me = await currentUser();
+  return !!me && siteAdminIds().includes((me.loginId ?? '').toLowerCase());
+}
