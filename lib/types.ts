@@ -24,6 +24,12 @@ export interface User {
   createdAt: string;
   /** 해시된 비밀번호 (lib/server/password.ts) */
   password?: string;
+  /** 약관·개인정보 수집에 동의한 시각 */
+  agreedAt?: string;
+  /** 연속 로그인 실패 횟수 */
+  failedLogins?: number;
+  /** 이 시각까지 로그인 잠금 (자동 대입 방지). null 이면 잠금 해제 */
+  lockedUntil?: string | null;
 }
 
 export interface Community {

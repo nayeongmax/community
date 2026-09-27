@@ -11,6 +11,13 @@ alter table users add column if not exists name     text;  -- 이름 (비공개)
 alter table users add column if not exists phone    text;  -- 연락처 (비공개)
 alter table users add column if not exists birthday text;  -- 생년월일 (비공개)
 
+-- 약관·개인정보 수집에 동의한 시각 (동의를 받았다는 기록)
+alter table users add column if not exists agreed_at timestamptz;
+
+-- 비밀번호 자동 대입 막기 — 연속 실패 횟수와 잠금 해제 시각
+alter table users add column if not exists failed_logins int not null default 0;
+alter table users add column if not exists locked_until  timestamptz;
+
 -- 이메일은 이제 받지 않는다. 예전 계정에만 남아 있으므로 필수 해제.
 alter table users alter column email drop not null;
 

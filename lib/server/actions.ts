@@ -22,36 +22,79 @@ const normalizeTags = (tags: string[]): string[] =>
 
 // ---------------- 로그인 ----------------
 
-export async function loginAction(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const loginId = String(form.get('loginId') ?? '').trim();
-  const password = String(form.get('password') ?? '');
-
-  const user = await repo.getUserByLoginId(loginId);
-  // 아이디가 없을 때와 비밀번호가 틀렸을 때를 구분해서 알려 주지 않는다
-  if (!user || !user.password || !(await verifyPassword(password, user.password))) {
-    return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
-  }
-
-  // 예전 평문 계정은 이번 로그인에 맞춰 해시로 올려 둔다
-  if (!isHashed(user.password)) {
-    await repo.updateUser(user.id, { password: await hashPassword(password) });
-  }
-
-  await setSession(user.id);
-  redirect('/');
-}
+/** 이만큼 연속으로 틀리면 잠근다 */
+const MAX_FAILS = 10;
+/** 잠기는 시간 (분) */
+const LOCK_MINUTES = 10;
 
 /** 아이디 규칙 — 영문/숫자/밑줄 4~20자 */
 const ID_RULE = /^[a-zA-Z0-9_]{4,20}$/;
 /** 생년월일 YYYY-MM-DD */
 const BIRTHDAY_RULE = /^\d{4}-\d{2}-\d{2}$/;
 
+const onlyDigits = (v: FormDataEntryValue | null) => String(v ?? '').replace(/[^0-9]/g, '');
+
+/**
+ * 연속 실패를 세고, 너무 많이 틀리면 잠시 잠근다.
+ *
+ * 비밀번호 8자는 사람이 외우기엔 적당하지만 기계가 대입하기에도 쉽다.
+ * 아무 제한이 없으면 하루면 다 털린다. 계정을 영구히 막으면 남이
+ * 일부러 잠가 버릴 수 있으므로, 짧게만 잠근다.
+ */
+function lockedMessage(until: string): string {
+  const left = Math.max(1, Math.ceil((+new Date(until) - Date.now()) / 60000));
+  return `비밀번호를 여러 번 틀렸습니다. ${left}분 뒤에 다시 시도해 주세요.`;
+}
+
+export async function loginAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const loginId = String(form.get('loginId') ?? '').trim();
+  const password = String(form.get('password') ?? '');
+
+  const user = await repo.getUserByLoginId(loginId);
+
+  if (user?.lockedUntil && +new Date(user.lockedUntil) > Date.now()) {
+    return { error: lockedMessage(user.lockedUntil) };
+  }
+
+  // 아이디가 없을 때와 비밀번호가 틀렸을 때를 구분해서 알려 주지 않는다
+  const ok = !!user && !!user.password && (await verifyPassword(password, user.password));
+
+  if (!ok) {
+    if (user) {
+      const fails = (user.failedLogins ?? 0) + 1;
+      await repo.updateUser(user.id, {
+        failedLogins: fails,
+        lockedUntil:
+          fails >= MAX_FAILS
+            ? new Date(Date.now() + LOCK_MINUTES * 60000).toISOString()
+            : undefined,
+      });
+      if (fails >= MAX_FAILS) {
+        return { error: `비밀번호를 ${MAX_FAILS}번 틀렸습니다. ${LOCK_MINUTES}분 뒤에 다시 시도해 주세요.` };
+      }
+    }
+    return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
+  }
+
+  await repo.updateUser(user!.id, { failedLogins: 0, lockedUntil: null });
+
+  // 예전 평문 계정은 이번 로그인에 맞춰 해시로 올려 둔다
+  if (!isHashed(user!.password!)) {
+    await repo.updateUser(user!.id, { password: await hashPassword(password) });
+  }
+
+  await setSession(user!.id);
+  redirect('/');
+}
+
 export async function signupAction(_prev: ActionState, form: FormData): Promise<ActionState> {
   const name = String(form.get('name') ?? '').trim();
   const loginId = String(form.get('loginId') ?? '').trim();
   const password = String(form.get('password') ?? '');
-  const phone = String(form.get('phone') ?? '').replace(/[^0-9]/g, '');
+  const phone = onlyDigits(form.get('phone'));
   const birthday = String(form.get('birthday') ?? '').trim();
+  const agreeTerms = form.get('agreeTerms') === 'on';
+  const agreePrivacy = form.get('agreePrivacy') === 'on';
 
   if (!name || !loginId || !password || !phone || !birthday) {
     return { error: '모든 항목을 입력해 주세요.' };
@@ -68,10 +111,14 @@ export async function signupAction(_prev: ActionState, form: FormData): Promise<
   if (!BIRTHDAY_RULE.test(birthday)) {
     return { error: '생년월일을 선택해 주세요.' };
   }
+  if (!agreeTerms || !agreePrivacy) {
+    return { error: '이용약관과 개인정보 수집·이용에 동의해 주세요.' };
+  }
 
   if (await repo.getUserByLoginId(loginId)) return { error: '이미 사용 중인 아이디입니다.' };
   if (await repo.getUserByNickname(loginId)) return { error: '이미 사용 중인 아이디입니다.' };
 
+  const now = new Date().toISOString();
   const user: User = {
     id: uid('u_'),
     loginId,
@@ -81,12 +128,80 @@ export async function signupAction(_prev: ActionState, form: FormData): Promise<
     phone,
     birthday,
     password: await hashPassword(password),
+    // 동의를 언제 받았는지 남겨 둔다
+    agreedAt: now,
     avatarColor: colorFromString(loginId),
-    createdAt: new Date().toISOString(),
+    createdAt: now,
   };
   await repo.createUser(user);
   await setSession(user.id);
   redirect('/');
+}
+
+// ---------------- 비밀번호 찾기 ----------------
+
+/**
+ * 가입할 때 적은 것으로 본인을 확인하고 비밀번호를 다시 정한다.
+ *
+ * 이메일이나 문자로 확인 코드를 보내는 것이 가장 안전하지만 아직 보낼
+ * 수단이 없다. 그래서 아이디·이름·연락처·생년월일이 모두 맞아야만
+ * 통과시키고, 여기서도 실패가 쌓이면 로그인과 같이 잠근다.
+ */
+export async function resetPasswordAction(
+  _prev: ActionState,
+  form: FormData
+): Promise<ActionState> {
+  const loginId = String(form.get('loginId') ?? '').trim();
+  const name = String(form.get('name') ?? '').trim();
+  const phone = onlyDigits(form.get('phone'));
+  const birthday = String(form.get('birthday') ?? '').trim();
+  const password = String(form.get('password') ?? '');
+  const confirm = String(form.get('passwordConfirm') ?? '');
+
+  if (!loginId || !name || !phone || !birthday || !password) {
+    return { error: '모든 항목을 입력해 주세요.' };
+  }
+  if (password.length < 8) {
+    return { error: '새 비밀번호는 8자 이상으로 지어 주세요.' };
+  }
+  if (password !== confirm) {
+    return { error: '새 비밀번호가 서로 다릅니다.' };
+  }
+
+  const user = await repo.getUserByLoginId(loginId);
+
+  if (user?.lockedUntil && +new Date(user.lockedUntil) > Date.now()) {
+    return { error: lockedMessage(user.lockedUntil) };
+  }
+
+  const matches =
+    !!user &&
+    user.name === name &&
+    onlyDigits(user.phone ?? '') === phone &&
+    user.birthday === birthday;
+
+  if (!matches) {
+    if (user) {
+      const fails = (user.failedLogins ?? 0) + 1;
+      await repo.updateUser(user.id, {
+        failedLogins: fails,
+        lockedUntil:
+          fails >= MAX_FAILS
+            ? new Date(Date.now() + LOCK_MINUTES * 60000).toISOString()
+            : undefined,
+      });
+    }
+    // 어느 항목이 틀렸는지는 알려 주지 않는다
+    return { error: '입력하신 정보와 맞는 계정을 찾지 못했습니다.' };
+  }
+
+  await repo.updateUser(user!.id, {
+    password: await hashPassword(password),
+    failedLogins: 0,
+    lockedUntil: null,
+  });
+
+  return { ok: true };
 }
 
 export async function logoutAction(): Promise<void> {
