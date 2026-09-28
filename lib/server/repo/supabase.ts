@@ -50,6 +50,9 @@ const toUser = (r: Row): User => ({
   birthday: (r.birthday as string) ?? undefined,
   email: (r.email as string) ?? undefined,
   password: r.password as string,
+  agreedAt: (r.agreed_at as string) ?? undefined,
+  failedLogins: (r.failed_logins as number) ?? 0,
+  lockedUntil: (r.locked_until as string) ?? undefined,
   avatarColor: r.avatar_color as string,
   createdAt: r.created_at as string,
 });
@@ -64,6 +67,9 @@ const fromUser = (u: Partial<User>): Row => {
   if (u.birthday !== undefined) row.birthday = u.birthday;
   if (u.email !== undefined) row.email = u.email;
   if (u.password !== undefined) row.password = u.password;
+  if (u.agreedAt !== undefined) row.agreed_at = u.agreedAt;
+  if (u.failedLogins !== undefined) row.failed_logins = u.failedLogins;
+  if (u.lockedUntil !== undefined) row.locked_until = u.lockedUntil;
   if (u.avatarColor !== undefined) row.avatar_color = u.avatarColor;
   if (u.createdAt !== undefined) row.created_at = u.createdAt;
   return row;

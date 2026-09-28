@@ -1,12 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
+import { useFormValues } from '../../../components/useFormValues';
 import { signupAction } from '../../../lib/server/actions';
 import SubmitButton from '../../../components/SubmitButton';
 
 export default function SignupPage() {
   const [state, action] = useActionState(signupAction, {});
+  // 잘못 입력해서 되돌아와도 적은 내용이 남아 있도록 값을 들고 있는다
+  const { bind } = useFormValues({ name: '', loginId: '', password: '', phone: '', birthday: '' });
+  // 체크박스도 되돌아왔을 때 풀리지 않도록 직접 들고 있는다
+  const [agree, setAgree] = useState({ terms: false, privacy: false });
+  const check = (key: 'terms' | 'privacy') => ({
+    checked: agree[key],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setAgree((a) => ({ ...a, [key]: e.target.checked })),
+  });
   const field =
     'w-full rounded-lg border border-hair bg-ground px-3 py-2.5 outline-none focus:border-ink/30 focus:bg-white';
   const label = 'block text-[13px] font-bold text-ink-mute mb-1';
@@ -27,7 +37,7 @@ export default function SignupPage() {
             </label>
             <input
               id="name"
-              name="name"
+              {...bind('name')}
               placeholder="홍길동"
               autoComplete="name"
               required
@@ -42,7 +52,7 @@ export default function SignupPage() {
             </label>
             <input
               id="loginId"
-              name="loginId"
+              {...bind('loginId')}
               placeholder="영문·숫자 4~20자"
               autoComplete="username"
               required
@@ -61,7 +71,7 @@ export default function SignupPage() {
             <input
               id="password"
               type="password"
-              name="password"
+              {...bind('password')}
               placeholder="8자 이상"
               autoComplete="new-password"
               required
@@ -76,7 +86,7 @@ export default function SignupPage() {
             </label>
             <input
               id="phone"
-              name="phone"
+              {...bind('phone')}
               type="tel"
               inputMode="numeric"
               placeholder="01012345678"
@@ -93,7 +103,7 @@ export default function SignupPage() {
             <input
               id="birthday"
               type="date"
-              name="birthday"
+              {...bind('birthday')}
               required
               max={today}
               className={field}
@@ -104,6 +114,55 @@ export default function SignupPage() {
             이름 · 연락처 · 생년월일은 <b className="text-ink-mute">공개되지 않습니다.</b> 다른
             사람에게는 아이디만 보여요.
           </p>
+
+          {/* 동의 — 무엇에 동의하는지 읽을 수 있어야 한다 */}
+          <div className="border border-hair rounded-lg divide-y divide-hair">
+            <label className="flex items-start gap-2.5 p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="agreeTerms"
+                {...check('terms')}
+                required
+                className="mt-0.5 w-4 h-4 accent-ink shrink-0"
+              />
+              <span className="text-sm text-ink-mute leading-relaxed">
+                <b className="text-ink">[필수]</b>{' '}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="font-semibold text-ink underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  이용약관
+                </Link>
+                에 동의합니다
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5 p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="agreePrivacy"
+                {...check('privacy')}
+                required
+                className="mt-0.5 w-4 h-4 accent-ink shrink-0"
+              />
+              <span className="text-sm text-ink-mute leading-relaxed">
+                <b className="text-ink">[필수]</b> 개인정보 수집·이용에 동의합니다
+                <span className="block text-xs text-ink-faint mt-1">
+                  아이디 · 비밀번호 · 이름 · 연락처 · 생년월일을 회원 식별과 본인 확인에 쓰고,
+                  탈퇴할 때까지 보관합니다. 동의를 거부할 수 있으나 그 경우 가입이 어렵습니다.{' '}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="font-semibold text-ink-mute underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    자세히
+                  </Link>
+                </span>
+              </span>
+            </label>
+          </div>
 
           {state.error && <p className="text-sm text-rose-500">{state.error}</p>}
 

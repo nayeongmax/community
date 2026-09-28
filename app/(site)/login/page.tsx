@@ -2,11 +2,14 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
+import { useFormValues } from '../../../components/useFormValues';
 import { loginAction } from '../../../lib/server/actions';
 import SubmitButton from '../../../components/SubmitButton';
 
 export default function LoginPage() {
   const [state, action] = useActionState(loginAction, {});
+  // 비밀번호를 틀려도 아이디는 남아 있게
+  const { bind } = useFormValues({ loginId: '', password: '' });
   const field =
     'w-full rounded-lg border border-hair bg-ground px-3 py-2.5 outline-none focus:border-ink/30 focus:bg-white';
 
@@ -16,7 +19,7 @@ export default function LoginPage() {
         <h1 className="text-xl font-black text-ink mb-5">로그인</h1>
         <form action={action} className="space-y-3">
           <input
-            name="loginId"
+            {...bind('loginId')}
             placeholder="아이디"
             autoComplete="username"
             required
@@ -24,7 +27,7 @@ export default function LoginPage() {
           />
           <input
             type="password"
-            name="password"
+            {...bind('password')}
             placeholder="비밀번호"
             autoComplete="current-password"
             required
@@ -42,6 +45,11 @@ export default function LoginPage() {
           아직 회원이 아니신가요?{' '}
           <Link href="/signup" className="text-ink font-semibold">
             회원가입
+          </Link>
+        </p>
+        <p className="text-sm text-ink-faint mt-1.5 text-center">
+          <Link href="/find-password" className="hover:text-ink-mute">
+            비밀번호를 잊으셨나요?
           </Link>
         </p>
       </div>

@@ -221,7 +221,16 @@ export default function GameLand({
         </main>
 
         <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-500">
-          게임 랜드 · 게임 기록은 이 브라우저에, 게시판 글은 서버에 저장됩니다
+          <p>게임 랜드 · 게임 기록은 이 브라우저에, 게시판 글은 서버에 저장됩니다</p>
+          <p className="mt-2 flex items-center justify-center gap-3">
+            <Link href="/terms" className="hover:text-slate-300">
+              이용약관
+            </Link>
+            <span>·</span>
+            <Link href="/privacy" className="font-semibold hover:text-slate-300">
+              개인정보처리방침
+            </Link>
+          </p>
         </footer>
       </div>
 

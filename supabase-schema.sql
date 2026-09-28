@@ -25,6 +25,9 @@ create table if not exists users (
   birthday      text,                   -- 생년월일 YYYY-MM-DD (비공개)
   email         text unique,            -- 예전 계정에만 남아 있다
   password      text not null,          -- scrypt 해시 (lib/server/password.ts)
+  agreed_at     timestamptz,            -- 약관·개인정보 동의 시각
+  failed_logins int not null default 0, -- 연속 로그인 실패 횟수
+  locked_until  timestamptz,            -- 이 시각까지 로그인 잠금
   avatar_color  text not null default '#6366f1',
   created_at    timestamptz not null default now()
 );

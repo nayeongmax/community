@@ -69,7 +69,15 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
         <footer className="border-t border-hair bg-white py-7 text-center text-xs text-ink-faint">
           <p>누구나 만드는 오픈 커뮤니티 플랫폼</p>
-          <p className="mt-2 flex items-center justify-center gap-3">
+          <p className="mt-2 flex items-center justify-center gap-3 flex-wrap">
+            <Link href="/terms" className="hover:text-ink-mute">
+              이용약관
+            </Link>
+            <span>·</span>
+            <Link href="/privacy" className="font-semibold hover:text-ink-mute">
+              개인정보처리방침
+            </Link>
+            <span>·</span>
             <Link href="/" className="hover:text-ink-mute">
               게임 랜드
             </Link>
